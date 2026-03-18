@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { CoachChat } from "@/components/coach-chat";
 import { EmptyState } from "@/components/empty-state";
 import { PlanRealityWidget } from "@/components/plan-reality-widget";
+import { StudentProfileCard } from "@/components/student-profile-card";
 import { WalletCard } from "@/components/wallet-card";
 import { Card, SectionHeading } from "@/components/ui";
 import { useStudyData } from "@/hooks/use-study-data";
@@ -44,6 +45,8 @@ export default function DashboardPage() {
             </h3>
           </Card>
         </section>
+
+        <StudentProfileCard profile={visibleProfile} />
 
         <WalletCard coins={visibleProfile?.wallet.coins ?? 0} transactions={visibleProfile?.wallet.transactions ?? []} />
 

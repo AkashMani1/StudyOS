@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -11,12 +11,18 @@ export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
   const redirectTarget = params.get("redirect") ?? "/dashboard";
-  const { signInWithEmail, signInWithGoogle, signUpWithEmail, loading } = useAuth();
+  const { signInWithEmail, signInWithGoogle, signUpWithEmail, loading, user } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace(redirectTarget);
+    }
+  }, [loading, redirectTarget, router, user]);
 
   const handleGoogleLogin = async () => {
     setSubmitting(true);

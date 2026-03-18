@@ -11,9 +11,19 @@ export function HomeAuthCta() {
   if (loading) {
     return (
       <div className="flex flex-wrap gap-3">
-        <Button className="px-6 py-4" disabled>
-          Checking session...
-        </Button>
+        <Link href="/dashboard">
+          <Button className="px-6 py-4">
+            Open dashboard
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
+        <Link href="/login">
+          <Button variant="secondary" className="px-6 py-4">
+            Continue sign in
+            <Sparkles className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
+        <p className="w-full text-sm text-white/70 dark:text-slate-300">Checking your session in the background.</p>
       </div>
     );
   }

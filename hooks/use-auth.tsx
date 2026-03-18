@@ -42,6 +42,35 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function createFallbackProfile(user: User, session: SessionPayload | null): AppUserProfile {
+  return {
+    displayName: user.displayName ?? "Focused Student",
+    email: user.email ?? "",
+    role: session?.role ?? "user",
+    fcmToken: null,
+    subscription: {
+      plan: "free",
+      razorpaySubId: null,
+      validUntil: null,
+      status: "inactive"
+    },
+    wallet: {
+      coins: 0,
+      transactions: []
+    },
+    preferences: {
+      preferredStartHour: 6,
+      preferredEndHour: 22,
+      blockedSites: [],
+      notificationsEnabled: true,
+      hardModeEnabled: false,
+      publicFailureLogEnabled: false
+    },
+    createdAt: null,
+    updatedAt: null
+  };
+}
+
 async function syncSession(user: User | null): Promise<SessionPayload | null> {
   if (!user) {
     await fetch("/api/session/logout", { method: "POST" });
@@ -118,6 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      setProfile((current) => current ?? createFallbackProfile(nextUser, nextSession));
+
       const profileRef = doc(db, "users", nextUser.uid);
       const response = await fetch("/api/profile", {
         method: "POST",
@@ -129,15 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: nextUser.email ?? "",
           fcmToken: null
         })
-      });
+      }).catch(() => null);
 
-      if (!response.ok) {
+      if (!response?.ok) {
         setLoading(false);
         return;
       }
 
       unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
-        setProfile(snapshot.data() as AppUserProfile | null);
+        const nextProfile = snapshot.data() as AppUserProfile | undefined;
+        setProfile(nextProfile ?? createFallbackProfile(nextUser, nextSession));
         setLoading(false);
       });
     });
