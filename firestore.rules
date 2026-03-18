@@ -1,0 +1,108 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function sameWallet() {
+      return request.resource.data.wallet.coins == resource.data.wallet.coins &&
+        request.resource.data.wallet.transactions == resource.data.wallet.transactions;
+    }
+
+    function sameSubscription() {
+      return request.resource.data.subscription.plan == resource.data.subscription.plan &&
+        request.resource.data.subscription.razorpaySubId == resource.data.subscription.razorpaySubId &&
+        request.resource.data.subscription.validUntil == resource.data.subscription.validUntil &&
+        request.resource.data.subscription.status == resource.data.subscription.status;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create: if isOwner(uid) &&
+        request.resource.data.role == "user" &&
+        request.resource.data.subscription.plan == "free" &&
+        request.resource.data.subscription.razorpaySubId == null &&
+        request.resource.data.subscription.validUntil == null &&
+        request.resource.data.subscription.status == "inactive" &&
+        request.resource.data.wallet.coins == 0 &&
+        request.resource.data.wallet.transactions.size() == 0;
+
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/goals/{goalId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/tasks/{taskId} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin() || (
+        isOwner(uid) &&
+        request.resource.data.subject == resource.data.subject &&
+        request.resource.data.taskName == resource.data.taskName &&
+        request.resource.data.estimatedMinutes == resource.data.estimatedMinutes &&
+        request.resource.data.priority == resource.data.priority &&
+        request.resource.data.suggestedDay == resource.data.suggestedDay &&
+        request.resource.data.splitFromTaskId == resource.data.splitFromTaskId
+      );
+    }
+
+    match /users/{uid}/dailyPlans/{planId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/sessions/{sessionId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/focusSessions/{dateId}/{document=**} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/insights/{weekId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /leaderboard/{weekId}/scores/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /publicFailures/{uid}/{dateId}/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /institutes/{instituteId}/students/{uid} {
+      allow read: if isAdmin() || isOwner(uid);
+      allow write: if isAdmin();
+    }
+
+    match /system/{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyOS Focus Guard</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09111b;
+        --panel: rgba(15, 24, 37, 0.92);
+        --border: rgba(125, 211, 252, 0.18);
+        --accent: #7dd3fc;
+        --danger: #fb7185;
+        --text: #eff6ff;
+        --muted: #94a3b8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(125, 211, 252, 0.18), transparent 38%),
+          linear-gradient(180deg, #08101a, #0b1420 58%, #08101a);
+        color: var(--text);
+      }
+
+      .card {
+        width: min(100%, 520px);
+        padding: 32px;
+        border-radius: 24px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.42);
+      }
+
+      .eyebrow {
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 5vw, 38px);
+        line-height: 1.1;
+      }
+
+      .domain {
+        font-size: 18px;
+        color: var(--accent);
+      }
+
+      .task {
+        margin-top: 18px;
+        font-size: 17px;
+      }
+
+      .meta {
+        margin-top: 14px;
+        color: var(--muted);
+      }
+
+      .countdown {
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        font-size: 15px;
+      }
+
+      button {
+        margin-top: 24px;
+        width: 100%;
+        border: 0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+
+      .override {
+        background: linear-gradient(135deg, #f59e0b, #fb7185);
+        color: #0f172a;
+      }
+
+      .hint {
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="eyebrow">StudyOS Focus Guard</div>
+      <h1>🔒 Blocked during focus session</h1>
+      <div class="domain" id="blocked-domain"></div>
+      <div class="task" id="task-name"></div>
+      <div class="meta" id="session-end"></div>
+      <div class="countdown" id="countdown"></div>
+      <button class="override" id="override-button">I need this for study</button>
+      <div class="hint">This opens a 5-minute grace period for this site and logs the override.</div>
+    </main>
+    <script src="blocked.js"></script>
+  </body>
+</html>

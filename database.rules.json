@@ -1,0 +1,39 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      ".read": "auth != null",
+      "$roomId": {
+        ".write": "auth != null && !data.exists() && newData.child('hostUid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['name', 'hostUid', 'members', 'isLive', 'isLocked']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 80 && newData.child('hostUid').isString() && newData.child('hostUid').val() === auth.uid && newData.child('isLive').isBoolean() && newData.child('isLocked').isBoolean() && newData.child('members').hasChild(auth.uid)",
+        "name": {
+          ".write": "auth != null && root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid",
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80"
+        },
+        "hostUid": {
+          ".write": false,
+          ".validate": "newData.isString() && (!data.exists() ? newData.val() === auth.uid : newData.val() === data.val())"
+        },
+        "isLive": {
+          ".write": "auth != null && root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid",
+          ".validate": "newData.isBoolean()"
+        },
+        "isLocked": {
+          ".write": "auth != null && root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid",
+          ".validate": "newData.isBoolean()"
+        },
+        "updatedAt": {
+          ".write": "auth != null && root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid",
+          ".validate": "newData.isNumber()"
+        },
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && (data.exists() || data.parent().childrenCount < 20) && (!root.child('rooms/' + $roomId + '/isLocked').val() || root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid || data.exists())",
+            ".validate": "newData.val() === null || (newData.hasChildren(['name', 'currentTask', 'joinedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 80 && newData.child('currentTask').isString() && newData.child('currentTask').val().length <= 140 && newData.child('joinedAt').isNumber())"
+          }
+        }
+      }
+    }
+  }
+}

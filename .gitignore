@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.next_stale*/
+.next_failed*/
+build/
+.env
+*.log
+.DS_Store
+*.tsbuildinfo
+.DS_Store

@@ -1,0 +1,45 @@
+{
+  "name": "studyos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/clean-next.mjs",
+    "prebuild": "node scripts/clean-next.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.typecheck.json --noEmit"
+  },
+  "dependencies": {
+    "@sentry/nextjs": "^9.14.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^10.14.1",
+    "firebase-admin": "^12.4.0",
+    "framer-motion": "^11.3.19",
+    "lucide-react": "^0.454.0",
+    "mixpanel-browser": "^2.60.0",
+    "next": "^16.1.7",
+    "next-themes": "^0.3.0",
+    "papaparse": "^5.4.1",
+    "razorpay": "^2.9.4",
+    "recharts": "^2.12.7",
+    "sonner": "^1.5.0",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.5.4"
+  }
+}

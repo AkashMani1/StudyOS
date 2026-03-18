@@ -1,0 +1,16 @@
+name: Deploy Firebase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: w9jds/firebase-action@v13.30.0
+        with:
+          args: deploy --only firestore:rules,firestore:indexes,database
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDYOS_4D50D }}
+          PROJECT_ID: studyos-4d50d

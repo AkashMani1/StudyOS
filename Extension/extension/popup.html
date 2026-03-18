@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyOS Focus Guard</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">StudyOS Focus Guard</div>
+          <h1>Focus without drift</h1>
+        </div>
+      </header>
+
+      <section class="panel" id="auth-status"></section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Today's Sessions</h2>
+          <button class="primary-button" id="start-focus-button" type="button">Start focus session</button>
+        </div>
+        <div class="section-body" id="sessions-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Focus Status</h2>
+          <button class="secondary-button" id="end-focus-button" type="button">End session</button>
+        </div>
+        <div class="section-body" id="focus-status"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Today's Distraction Report</h2>
+        </div>
+        <div class="section-body" id="distraction-report"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Blocklist Editor</h2>
+        </div>
+        <div class="section-body">
+          <div class="tags" id="blocklist-tags"></div>
+          <input id="blocklist-input" class="text-input" type="text" placeholder="Add domain and press Enter">
+        </div>
+      </section>
+
+      <section class="stats-strip" id="stats-strip"></section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
