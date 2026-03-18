@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudyData } from "@/hooks/use-study-data";
 import { cn, initials } from "@/lib/utils";
 import { Badge, Button } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
 
 export function AppShell({
   title,
@@ -252,6 +253,8 @@ export function AppShell({
               {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
           </header>
+
+          <SectionTabs />
 
           <AnimatePresence mode="wait">
             <motion.main

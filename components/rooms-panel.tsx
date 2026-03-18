@@ -14,6 +14,8 @@ export function RoomsPanel() {
   const [rooms, setRooms] = useState<RoomDoc[]>([]);
   const [roomName, setRoomName] = useState("");
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [creatingRoom, setCreatingRoom] = useState(false);
+  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -30,17 +32,50 @@ export function RoomsPanel() {
   );
 
   const handleCreateRoom = async () => {
-    if (!user || !profile || !roomName.trim()) {
-      if (!user) {
-        toast.error("Sign in to create a room and compete live.");
-      }
+    if (!roomName.trim()) {
+      toast.error("Enter a room name first.");
       return;
     }
 
-    const id = await createRoom(user.uid, profile.displayName, roomName.trim());
-    setRoomName("");
-    setSelectedRoomId(id);
-    toast.success("Room created and set live.");
+    if (!user) {
+      toast.error("Sign in to create a room and compete live.");
+      return;
+    }
+
+    if (!profile) {
+      toast.error("Your profile is still loading. Try room creation again in a moment.");
+      return;
+    }
+
+    try {
+      setCreatingRoom(true);
+      const trimmedRoomName = roomName.trim();
+      const id = await createRoom(user.uid, profile.displayName, trimmedRoomName);
+      setRooms((current) => [
+        {
+          id,
+          name: trimmedRoomName,
+          hostUid: user.uid,
+          members: {
+            [user.uid]: {
+              name: profile.displayName,
+              currentTask: "Planning next block",
+              joinedAt: Date.now()
+            }
+          },
+          isLive: true,
+          isLocked: false
+        },
+        ...current.filter((room) => room.id !== id)
+      ]);
+      setRoomName("");
+      setSelectedRoomId(id);
+      toast.success("Room created and opened.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to create room.");
+    } finally {
+      setCreatingRoom(false);
+    }
   };
 
   const handleJoin = async (roomId: string) => {
@@ -51,11 +86,14 @@ export function RoomsPanel() {
     }
 
     try {
+      setJoiningRoomId(roomId);
       await joinRoom(roomId, user.uid, profile.displayName, "Deep work");
       setSelectedRoomId(roomId);
       toast.success("Joined room.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to join room.");
+    } finally {
+      setJoiningRoomId(null);
     }
   };
 
@@ -83,14 +121,10 @@ export function RoomsPanel() {
         />
 
         <div className="flex gap-3">
-          <Input
-            value={roomName}
-            onChange={(event) => setRoomName(event.target.value)}
-            placeholder="Create a room name"
-          />
-          <Button onClick={() => void handleCreateRoom()}>
+          <Input value={roomName} onChange={(event) => setRoomName(event.target.value)} placeholder="Create a room name" />
+          <Button disabled={creatingRoom} onClick={() => void handleCreateRoom()}>
             <Plus className="mr-2 h-4 w-4" />
-            Create
+            {creatingRoom ? "Creating..." : "Create"}
           </Button>
         </div>
 
@@ -106,8 +140,8 @@ export function RoomsPanel() {
                   {Object.keys(room.members ?? {}).length} members · {room.isLocked ? "Locked" : "Open"}
                 </p>
               </div>
-              <Button variant="ghost" onClick={() => void handleJoin(room.id)}>
-                {user ? "Join room" : "View room"}
+              <Button disabled={joiningRoomId === room.id} variant="ghost" onClick={() => void handleJoin(room.id)}>
+                {joiningRoomId === room.id ? "Joining..." : user ? "Join room" : "View room"}
               </Button>
             </div>
           ))}
@@ -120,6 +154,7 @@ export function RoomsPanel() {
           title={selectedRoom?.name ?? "No room selected"}
           description="When you close the tab, onDisconnect removes you automatically."
         />
+
         {selectedRoom ? (
           <>
             <div className="space-y-3">
@@ -138,12 +173,14 @@ export function RoomsPanel() {
                 </div>
               ))}
             </div>
+
             <div className="flex flex-wrap gap-3">
               <Button variant="ghost" onClick={() => void handleLeave()}>
                 Leave room
               </Button>
               {isHost ? (
                 <Button
+                  variant="secondary"
                   onClick={() => {
                     if (!user) {
                       toast.error("Sign in to control room state.");
@@ -152,7 +189,6 @@ export function RoomsPanel() {
 
                     void updateRoomState(selectedRoom.id, !selectedRoom.isLocked);
                   }}
-                  variant="secondary"
                 >
                   {selectedRoom.isLocked ? (
                     <>

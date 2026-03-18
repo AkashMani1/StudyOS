@@ -12,6 +12,7 @@ import {
   Users
 } from "lucide-react";
 import { Button, Card, Badge } from "@/components/ui";
+import { HomeAuthCta } from "@/components/home-auth-cta";
 import { primaryNavItems, secondaryNavItems } from "@/lib/constants";
 
 const featureCards = [
@@ -85,20 +86,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Link href="/login">
-                  <Button className="px-6 py-4">
-                    Sign in
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button variant="secondary" className="px-6 py-4">
-                    Create account
-                    <Sparkles className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+              <HomeAuthCta />
 
               <div className="grid gap-3 sm:grid-cols-3">
                 {liveStats.map((item) => {
@@ -309,18 +297,8 @@ export default function HomePage() {
                   Students create an account, personalize the experience, and move directly into the app with a clean, focused flow.
                 </p>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href="/login">
-                    <Button className="bg-white text-ink hover:bg-white/90">
-                      Sign in now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button variant="ghost" className="border border-white/10 bg-white/10 text-white hover:bg-white/15 dark:bg-white/10 dark:text-white">
-                      Create account
-                    </Button>
-                  </Link>
+                <div className="mt-6">
+                  <HomeAuthCta />
                 </div>
               </div>
             </div>

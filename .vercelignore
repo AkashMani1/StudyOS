@@ -1,0 +1,13 @@
+.git
+.github
+.next
+.next_stale*
+.next_failed*
+.vercel
+node_modules
+.env
+.env*
+*.log
+*.tsbuildinfo
+README.md
+docs

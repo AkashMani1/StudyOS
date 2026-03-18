@@ -28,11 +28,12 @@
           ".validate": "newData.isNumber()"
         },
         "members": {
-          "$uid": {
-            ".write": "auth != null && auth.uid === $uid && (data.exists() || data.parent().childrenCount < 20) && (!root.child('rooms/' + $roomId + '/isLocked').val() || root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid || data.exists())",
-            ".validate": "newData.val() === null || (newData.hasChildren(['name', 'currentTask', 'joinedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 80 && newData.child('currentTask').isString() && newData.child('currentTask').val().length <= 140 && newData.child('joinedAt').isNumber())"
-          }
-        }
+  "$uid": {
+    ".write": "auth != null && auth.uid === $uid && (data.exists() || root.child('rooms/' + $roomId + '/isLocked').val() === false || root.child('rooms/' + $roomId + '/hostUid').val() === auth.uid)",
+    ".validate": "newData.val() === null || (newData.hasChildren(['name', 'currentTask', 'joinedAt']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('currentTask').isString() && newData.child('currentTask').val().length <= 140 && newData.child('joinedAt').isNumber())"
+  }
+}
+
       }
     }
   }

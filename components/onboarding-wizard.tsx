@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Button, Card, Input, SectionHeading } from "@/components/ui";
 import { createGoal } from "@/services/study-service";
+import { generateDailyPlan } from "@/services/study-service";
 import type { SubjectInput } from "@/types/domain";
 
 export function OnboardingWizard() {
@@ -56,7 +57,9 @@ export function OnboardingWizard() {
         }
       );
 
-      toast.success(response.usedFallback ? "Goal saved with fallback task plan." : "Goal saved and AI plan generated.");
+      await generateDailyPlan();
+      toast.success(response.usedFallback ? "Goal saved with a fallback plan and your first day was generated." : "Goal saved and your first study day is ready.");
+      router.refresh();
       router.push("/planner");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to finish onboarding.");
