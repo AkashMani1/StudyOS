@@ -335,13 +335,17 @@ function getStreakFromSessions(sessions: Array<Pick<TaskDoc, "completedAt"> & { 
 }
 
 export async function getLeaderboardRows(): Promise<LeaderboardScore[]> {
-  const usersSnapshot = await adminDb.collection("users").get();
+  const usersSnapshot = await adminDb
+    .collection("users")
+    .orderBy("wallet.coins", "desc")
+    .limit(50)
+    .get();
 
   const rows = await Promise.all(
     usersSnapshot.docs.map(async (userDoc) => {
       const user = userDoc.data() as AppUserProfile;
       const [sessionsSnapshot, publicFailureSnapshot] = await Promise.all([
-        userDoc.ref.collection("sessions").limit(90).get(),
+        userDoc.ref.collection("sessions").limit(30).get(),
         adminDb.collection("publicFailures").doc(userDoc.id).collection(todayIsoDate()).doc("summary").get()
       ]);
       const sessions = sessionsSnapshot.docs.map((entry) => entry.data() as {

@@ -41,7 +41,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-comet focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
         variantStyles[variant],
         className
       )}
@@ -55,7 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cn(
-        "w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none ring-0 transition placeholder:text-slate-500 focus:border-comet dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
+        "w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-comet focus:ring-4 focus:ring-comet/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
         className
       )}
       {...props}
@@ -70,7 +70,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     <textarea
       ref={ref}
       className={cn(
-        "min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none ring-0 transition placeholder:text-slate-500 focus:border-comet dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
+        "min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-comet focus:ring-4 focus:ring-comet/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
         className
       )}
       {...props}

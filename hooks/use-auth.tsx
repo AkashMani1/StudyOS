@@ -117,17 +117,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsubscribeProfile: Unsubscribe | undefined;
+    let profileListenerUid: string | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (nextUser) => {
-      setLoading(true);
       setUser(nextUser);
 
-      if (unsubscribeProfile) {
+      if (unsubscribeProfile && (!nextUser || nextUser.uid !== profileListenerUid)) {
         unsubscribeProfile();
         unsubscribeProfile = undefined;
+        profileListenerUid = null;
       }
 
       if (!nextUser) {
+        setLoading(true);
         const nextSession = await syncSession(null);
         commitSession(nextSession);
         setProfile(null);
@@ -135,10 +137,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Skip re-sync if the existing session is for the same user and hasn't expired.
+      // This prevents burning the session-bootstrap rate limit on tab-focus events.
       const existingSession = sessionRef.current;
-      const nextSession =
-        existingSession?.uid === nextUser.uid ? existingSession : await syncSession(nextUser);
+      const sessionStillValid =
+        existingSession?.uid === nextUser.uid &&
+        existingSession.exp > Date.now() + 60_000; // 1min buffer
 
+      if (sessionStillValid) {
+        // Session is fine — just ensure profile listener is running
+        if (!unsubscribeProfile) {
+          setLoading(true);
+          const profileRef = doc(db, "users", nextUser.uid);
+          unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
+            const nextProfile = snapshot.data() as AppUserProfile | undefined;
+            setProfile(nextProfile ?? createFallbackProfile(nextUser, existingSession));
+            setLoading(false);
+          });
+          profileListenerUid = nextUser.uid;
+        }
+        return;
+      }
+
+      // Full session bootstrap needed
+      setLoading(true);
+      const nextSession = await syncSession(nextUser);
       commitSession(nextSession);
 
       if (!nextSession) {
@@ -172,6 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(nextProfile ?? createFallbackProfile(nextUser, nextSession));
         setLoading(false);
       });
+      profileListenerUid = nextUser.uid;
     });
 
     return () => {

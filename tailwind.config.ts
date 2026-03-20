@@ -5,13 +5,14 @@ const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
-    "./hooks/**/*.{ts,tsx}",
-    "./lib/**/*.{ts,tsx}",
-    "./services/**/*.{ts,tsx}",
-    "./api/**/*.{ts,tsx}"
+    "./hooks/**/*.{ts,tsx}"
   ],
   theme: {
     extend: {
+      fontFamily: {
+        body: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-outfit)", "sans-serif"]
+      },
       colors: {
         ink: "#09111f",
         mist: "#edf3ff",

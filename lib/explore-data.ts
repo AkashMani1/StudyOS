@@ -1,3 +1,14 @@
+/**
+ * Explore Mode Demo Data
+ *
+ * This module provides realistic but static mock data for the "Explore Mode"
+ * experience — shown to unauthenticated visitors so they can preview the
+ * full product before signing up. All data here is intentionally hardcoded
+ * and scoped exclusively to the explore/demo flow.
+ *
+ * These functions are ONLY consumed by components when `user === null`.
+ * Live user data is always fetched from Firestore / RTDB.
+ */
 import type {
   AppUserProfile,
   DailyPlanDoc,
@@ -10,20 +21,20 @@ import type {
 
 function isoDay(offset = 0): string {
   const date = new Date();
-  date.setDate(date.getDate() + offset);
+  date.setUTCDate(date.getUTCDate() + offset);
   return date.toISOString().slice(0, 10);
 }
 
 function currentWeekDays(): string[] {
   const base = new Date();
-  const day = base.getDay();
+  const day = base.getUTCDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
   const monday = new Date(base);
-  monday.setDate(base.getDate() + mondayOffset);
+  monday.setUTCDate(base.getUTCDate() + mondayOffset);
 
   return Array.from({ length: 7 }, (_, index) => {
     const current = new Date(monday);
-    current.setDate(monday.getDate() + index);
+    current.setUTCDate(monday.getUTCDate() + index);
     return current.toISOString().slice(0, 10);
   });
 }
@@ -188,8 +199,8 @@ export function getExploreRooms(): RoomDoc[] {
       isLive: true,
       isLocked: false,
       members: {
-        "rank-1": { name: "Aarav", currentTask: "Calculus revision", joinedAt: Date.now() - 1000 * 60 * 25 },
-        "rank-2": { name: "Diya", currentTask: "Mock test review", joinedAt: Date.now() - 1000 * 60 * 12 }
+        "rank-1": { name: "Aarav", currentTask: "Calculus revision", joinedAt: 0 },
+        "rank-2": { name: "Diya", currentTask: "Mock test review", joinedAt: 0 }
       }
     },
     {
@@ -199,7 +210,7 @@ export function getExploreRooms(): RoomDoc[] {
       isLive: true,
       isLocked: true,
       members: {
-        "rank-4": { name: "Kabir", currentTask: "Genetics notes cleanup", joinedAt: Date.now() - 1000 * 60 * 18 }
+        "rank-4": { name: "Kabir", currentTask: "Genetics notes cleanup", joinedAt: 0 }
       }
     }
   ];

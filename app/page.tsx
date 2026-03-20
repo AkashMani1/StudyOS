@@ -69,7 +69,7 @@ export default function HomePage() {
       </div>
 
       <div className="relative mx-auto flex max-w-7xl flex-col gap-8">
-        <section className="overflow-hidden rounded-[40px] border border-white/40 bg-[linear-gradient(135deg,rgba(9,17,31,0.97),rgba(28,42,79,0.92),rgba(95,111,255,0.82))] px-6 py-6 text-white shadow-glow lg:px-10 lg:py-10">
+        <section className="overflow-hidden rounded-3xl sm:rounded-[40px] border border-white/40 bg-[linear-gradient(135deg,rgba(9,17,31,0.97),rgba(28,42,79,0.92),rgba(95,111,255,0.82))] px-4 py-5 sm:px-6 sm:py-6 text-white shadow-glow lg:px-10 lg:py-10">
           <div className="grid gap-10 lg:grid-cols-[1.02fr,0.98fr] lg:items-center">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
@@ -78,7 +78,7 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="max-w-4xl font-display text-5xl font-bold leading-[0.95] sm:text-6xl lg:text-7xl">
+                <h1 className="max-w-4xl font-display text-3xl font-bold leading-[0.95] sm:text-5xl md:text-6xl lg:text-7xl">
                   A study app students will actually want to open every day.
                 </h1>
                 <p className="max-w-2xl text-base text-white/76 sm:text-lg">
@@ -95,7 +95,7 @@ export default function HomePage() {
                   return (
                     <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/10 px-4 py-4 backdrop-blur-sm">
                       <Icon className="h-5 w-5 text-aurora" />
-                      <p className="mt-4 font-display text-3xl font-bold">{item.value}</p>
+                      <p className="mt-4 font-display text-2xl font-bold sm:text-3xl">{item.value}</p>
                       <p className="mt-1 text-sm text-white/70">{item.label}</p>
                     </div>
                   );
@@ -189,11 +189,11 @@ export default function HomePage() {
           })}
         </section>
 
-        <section className="rounded-[32px] border border-white/50 bg-white/80 p-5 shadow-glow backdrop-blur-xl dark:bg-slate-950/70">
+        <section className="rounded-2xl sm:rounded-[32px] border border-white/50 bg-white/80 p-4 sm:p-5 shadow-glow backdrop-blur-xl dark:bg-slate-950/70">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-comet">All feature tabs</p>
-              <h2 className="mt-2 font-display text-3xl font-bold">See the full website structure in one place.</h2>
+              <h2 className="mt-2 font-display text-xl font-bold sm:text-3xl">See the full website structure in one place.</h2>
               <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
                 Users can understand the full product faster when every major section is visible and clickable from the homepage.
               </p>
@@ -214,7 +214,7 @@ export default function HomePage() {
                       </div>
                       <ArrowUpRight className="h-4 w-4 text-slate-400 transition group-hover:text-comet" />
                     </div>
-                    <h3 className="mt-5 font-display text-2xl font-bold">{item.label}</h3>
+                    <h3 className="mt-5 font-display text-lg font-bold sm:text-2xl">{item.label}</h3>
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                       {item.label === "Dashboard" && "Track execution, misses, coins, and your overall momentum."}
                       {item.label === "Planner" && "Open the AI plan, inspect time blocks, and understand the study flow."}

@@ -14,12 +14,18 @@ export interface RateLimitResult {
   resetAt: Date;
 }
 
+/** Extra buffer before Firestore TTL deletes the doc (1 hour) */
+const TTL_BUFFER_MS = 60 * 60 * 1000;
+
+const rateLimitCollection = () =>
+  adminDb.collection("system").doc("rateLimits").collection("windows");
+
 export async function enforceRateLimit(options: RateLimitOptions): Promise<RateLimitResult> {
   const now = Date.now();
   const bucketStart = Math.floor(now / (options.windowSeconds * 1000)) * options.windowSeconds;
   const docId = `${options.scope}:${options.identity}:${bucketStart}`;
   const resetAt = new Date((bucketStart + options.windowSeconds) * 1000);
-  const ref = adminDb.collection("system").doc("rateLimits").collection("windows").doc(docId);
+  const ref = rateLimitCollection().doc(docId);
 
   return adminDb.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(ref);
@@ -40,7 +46,7 @@ export async function enforceRateLimit(options: RateLimitOptions): Promise<RateL
         identity: options.identity,
         count: count + 1,
         bucketStart,
-        expiresAt: Timestamp.fromMillis(resetAt.getTime()),
+        expiresAt: Timestamp.fromMillis(resetAt.getTime() + TTL_BUFFER_MS),
         updatedAt: FieldValue.serverTimestamp()
       },
       { merge: true }
@@ -53,3 +59,29 @@ export async function enforceRateLimit(options: RateLimitOptions): Promise<RateL
     };
   });
 }
+
+/**
+ * Fallback cleanup: deletes all rate-limit docs whose expiresAt has passed.
+ * Call this from a cron endpoint or scheduled Cloud Function.
+ * Firestore TTL policy on the `expiresAt` field is the preferred approach —
+ * enable it with:
+ *   gcloud firestore fields ttls update expiresAt \
+ *     --collection-group=windows \
+ *     --project=YOUR_PROJECT_ID
+ */
+export async function purgeExpiredRateLimitDocs(): Promise<number> {
+  const now = Timestamp.now();
+  const expired = await rateLimitCollection()
+    .where("expiresAt", "<", now)
+    .limit(500)
+    .get();
+
+  if (expired.empty) return 0;
+
+  const batch = adminDb.batch();
+  expired.docs.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
+  return expired.size;
+}
+

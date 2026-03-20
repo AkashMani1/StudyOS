@@ -7,7 +7,10 @@ export const subjectInputSchema = z.object({
 
 export const generatePlanSchema = z.object({
   examName: z.string().trim().min(2).max(120),
-  deadline: z.string().date(),
+  deadline: z.string().date().refine(
+    (value) => new Date(value) > new Date(new Date().toISOString().slice(0, 10)),
+    { message: "Deadline must be a future date." }
+  ),
   subjects: z.array(subjectInputSchema).min(1).max(20)
 });
 

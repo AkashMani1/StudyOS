@@ -22,17 +22,34 @@
   * {
     @apply border-slate-200 dark:border-slate-800;
   }
+
+  /* WCAG 2.1 AA: Visible focus indicators */
+  [tabindex]:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-comet ring-offset-2 ring-offset-white dark:ring-offset-night;
+  }
+
+  /* Skip to content link for keyboard navigation */
+  .skip-to-content {
+    @apply absolute left-4 top-4 z-[100] -translate-y-16 rounded-xl bg-comet px-4 py-2 font-semibold text-white transition-transform focus:translate-y-0;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer utilities {
-  .font-display {
-    font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
-  }
-
-  .font-body {
-    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
-  }
-
   .animate-float-slow {
     animation: float-slow 8s ease-in-out infinite;
   }

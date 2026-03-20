@@ -1,60 +1,249 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { motion } from "framer-motion";
+import { RefreshCw, Trophy, Medal, Zap, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { LeaderboardTable } from "@/components/leaderboard-table";
 import { ProGate } from "@/components/pro-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { getExploreLeaderboard } from "@/lib/explore-data";
+import { db } from "@/lib/firebase";
 import { refreshLeaderboard } from "@/services/study-service";
 import type { LeaderboardScore } from "@/types/domain";
 
+const CACHE_KEY = "lb_cache";
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+const gradients = [
+  "from-rose-400 to-red-500", "from-blue-400 to-emerald-400",
+  "from-violet-400 to-fuchsia-500", "from-amber-400 to-orange-500",
+  "from-cyan-400 to-indigo-500", "from-teal-400 to-blue-500",
+  "from-pink-400 to-rose-400", "from-indigo-400 to-purple-500"
+];
+
+function getDeterministicGradient(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return gradients[Math.abs(hash) % gradients.length];
+}
+
 function getWeekId(): string {
   const now = new Date();
-  return `${now.getUTCFullYear()}-W${Math.ceil((now.getUTCDate() + 6 - now.getUTCDay()) / 7)}`;
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getUTCDay() + 1) / 7);
+  return `${now.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+async function readPublicLeaderboard(): Promise<LeaderboardScore[] | null> {
+  try {
+    const weekId = getWeekId();
+    const snap = await getDocs(
+      query(collection(db, "leaderboard", weekId, "scores"), orderBy("coins", "desc"))
+    );
+    if (snap.empty) return null;
+    return snap.docs.map((d) => d.data() as LeaderboardScore);
+  } catch {
+    return null;
+  }
+}
+
+function loadCache(): LeaderboardScore[] | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { rows, ts } = JSON.parse(raw) as { rows: LeaderboardScore[]; ts: number };
+    if (Date.now() - ts > CACHE_TTL_MS) return null;
+    return rows;
+  } catch {
+    return null;
+  }
+}
+
+function saveCache(rows: LeaderboardScore[]): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ rows, ts: Date.now() }));
+  } catch {
+    /* quota exceeded — ignore */
+  }
 }
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<LeaderboardScore[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const weekId = useMemo(() => getWeekId(), []);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(async (force = false) => {
     if (!user) {
       setRows(getExploreLeaderboard());
       return;
     }
 
-    const load = async () => {
-      try {
-        setRefreshing(true);
-        setRows(await refreshLeaderboard());
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to refresh leaderboard.");
-      } finally {
-        setRefreshing(false);
-      }
-    };
+    // On normal mount: try cache → Firestore only (never hit the API)
+    if (!force) {
+      const cached = loadCache();
+      if (cached) { setRows(cached); return; }
 
-    void load();
-  }, [user, weekId]);
+      try {
+        setLoading(true);
+        const firestoreRows = await readPublicLeaderboard();
+        if (firestoreRows && firestoreRows.length > 0) {
+          setRows(firestoreRows);
+          saveCache(firestoreRows);
+          setLastUpdated(new Date());
+        }
+        // If Firestore is empty, just show the empty state — do NOT call API
+      } catch {
+        /* silently show empty state */
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // force=true: user clicked Refresh → call API → it writes to Firestore
+    try {
+      setLoading(true);
+      const apiRows = await refreshLeaderboard();
+      setRows(apiRows);
+      saveCache(apiRows);
+      setLastUpdated(new Date());
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Rate limit hit. Wait a minute and try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { void load(false); }, [load]);
+
+  const sorted = useMemo(() => [...rows].sort((a, b) => b.coins - a.coins), [rows]);
+  const topTen = sorted.slice(0, 10);
+  const meIndex = sorted.findIndex((r) => r.uid === user?.uid);
 
   return (
     <AppShell
       title="Leaderboard"
-      subtitle="The weekly ranking board for coins, streaks, completion rate, and optionally public failure visibility."
+      subtitle="Weekly ranking board — reads from Firebase instantly. Refresh to recompute from Firestore data."
     >
       <ProGate>
-        <LeaderboardTable
-          currentUid={user?.uid ?? null}
-          onRefresh={user ? () => void refreshLeaderboard().then(setRows).catch((error: unknown) => {
-            toast.error(error instanceof Error ? error.message : "Unable to refresh leaderboard.");
-          }) : undefined}
-          refreshing={refreshing}
-          rows={[...rows].sort((left, right) => right.coins - left.coins)}
-        />
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-comet mb-1">Weekly Rankings</p>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Top Scholars</h2>
+              {lastUpdated && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Last updated {lastUpdated.toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => void load(true)}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-60"
+            >
+              <RefreshCw className={`h-4 w-4 text-comet ${loading ? "animate-spin" : ""}`} />
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+          </div>
+
+          {/* User is outside top 10 */}
+          {meIndex >= 10 && user && (
+            <div className="rounded-2xl border border-comet/30 bg-comet/10 px-5 py-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-comet mb-0.5">Your Position</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">{sorted[meIndex]?.displayName}</p>
+              </div>
+              <p className="font-black text-3xl text-comet">#{meIndex + 1}</p>
+            </div>
+          )}
+
+          {/* Leaderboard List */}
+          <div className="space-y-3">
+            {topTen.map((row, index) => {
+              const isTop = index === 0;
+              const isSilver = index === 1;
+              const isBronze = index === 2;
+              const isMe = row.uid === user?.uid;
+              return (
+                <motion.div
+                  key={row.uid}
+                  initial={{ y: 16, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.04 }}
+                  className={`flex items-center gap-4 rounded-3xl border p-4 md:p-5 transition-all ${
+                    isMe && !isTop
+                      ? "border-comet/40 bg-comet/10 shadow-[0_0_20px_rgba(99,102,241,0.15)] ring-1 ring-comet/20"
+                      : isTop
+                        ? "border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/5 shadow-[0_0_30px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20"
+                        : "border-slate-200 dark:border-white/5 bg-white dark:bg-white/5 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                  }`}
+                >
+                  {/* Rank badge */}
+                  <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-2xl font-black text-sm ${
+                    isTop
+                      ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.5)]"
+                      : isSilver
+                        ? "bg-gradient-to-br from-slate-300 to-slate-400 text-white shadow-md"
+                        : isBronze
+                          ? "bg-gradient-to-br from-amber-700 to-amber-600 text-white shadow-md"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  }`}>
+                    {isTop ? <Trophy className="h-5 w-5" /> : isSilver ? <Medal className="h-5 w-5" /> : index + 1}
+                  </div>
+
+                  {/* Avatar */}
+                  <div className={`shrink-0 h-11 w-11 rounded-full bg-gradient-to-br ${getDeterministicGradient(row.uid)} flex items-center justify-center text-white font-black text-lg shadow-inner border border-white/20`}>
+                    {row.displayName.charAt(0).toUpperCase()}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className={`font-bold text-base truncate ${
+                        isTop ? "text-amber-700 dark:text-amber-400"
+                          : isMe ? "text-comet dark:text-indigo-300"
+                            : "text-slate-900 dark:text-slate-100"
+                      }`}>
+                        {row.displayName}
+                      </p>
+                      {isMe && <span className="shrink-0 text-xs font-bold bg-comet text-white px-2 py-0.5 rounded-full">You</span>}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      {row.streak > 0 && <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" />{row.streak}d streak</span>}
+                      {row.completedTasks > 0 && <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-emerald-500" />{row.completedTasks} tasks</span>}
+                      {row.failureSummary && <span className="text-rose-500">{row.failureSummary}</span>}
+                    </div>
+                  </div>
+
+                  {/* Coins */}
+                  <div className="shrink-0 text-right">
+                    <p className={`text-2xl font-black tabular-nums ${
+                      isTop ? "text-amber-600 dark:text-amber-400"
+                        : isMe ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-slate-800 dark:text-slate-100"
+                    }`}>
+                      {row.coins.toLocaleString()}
+                    </p>
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">coins</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {topTen.length === 0 && !loading && (
+              <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-3xl">
+                <p className="text-slate-500 dark:text-slate-400 font-medium">No scholars ranked yet. Click Refresh to compute the first ranking!</p>
+              </div>
+            )}
+          </div>
+        </div>
       </ProGate>
     </AppShell>
   );

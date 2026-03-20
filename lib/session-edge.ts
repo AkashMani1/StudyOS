@@ -13,6 +13,35 @@ function decodeBase64Url(input: string): Uint8Array {
   return bytes;
 }
 
+/**
+ * Constant-time comparison of two strings to prevent timing attacks.
+ * Both strings are encoded to bytes and XORed element-wise;
+ * the accumulated mismatch value is checked at the end so
+ * the comparison always takes the same amount of time.
+ */
+function constantTimeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const bufA = encoder.encode(a);
+  const bufB = encoder.encode(b);
+
+  if (bufA.length !== bufB.length) {
+    // Still perform a full loop to avoid leaking length info via timing.
+    // Use the longer buffer as the iteration count.
+    const maxLen = Math.max(bufA.length, bufB.length);
+    let mismatch = 1; // start with a mismatch since lengths differ
+    for (let i = 0; i < maxLen; i++) {
+      mismatch |= (bufA[i % bufA.length] ?? 0) ^ (bufB[i % bufB.length] ?? 0);
+    }
+    return mismatch === 0; // always false, but in constant time
+  }
+
+  let mismatch = 0;
+  for (let i = 0; i < bufA.length; i++) {
+    mismatch |= bufA[i] ^ bufB[i];
+  }
+  return mismatch === 0;
+}
+
 async function createSignature(encodedPayload: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -41,7 +70,7 @@ export async function verifySessionCookieEdge(
 
   const expected = await createSignature(encodedPayload, secret);
 
-  if (signature !== expected) {
+  if (!constantTimeEqual(signature, expected)) {
     return null;
   }
 

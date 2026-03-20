@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudyData } from "@/hooks/use-study-data";
 import { cn, initials } from "@/lib/utils";
 import { Badge, Button } from "@/components/ui";
+import { FloatingCoach } from "@/components/floating-coach";
 import { SectionTabs } from "@/components/section-tabs";
 
 export function AppShell({
@@ -36,10 +37,17 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, loading: authLoading } = useAuth();
   const { tasks, sessions, dailyPlans } = useStudyData();
   const viewer = profile ?? getExploreProfile();
   const isExplore = !user;
+  const showSkeleton = authLoading && !isExplore;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const visibleTasks = user ? tasks : getExploreTasks();
   const visibleSessions = user ? sessions : getExploreSessions();
   const visibleDailyPlans = user ? dailyPlans : getExploreDailyPlans();
@@ -55,8 +63,9 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-hero-grid text-ink dark:bg-night dark:text-white">
+      <a href="#main-content" className="skip-to-content">Skip to content</a>
       <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 pb-28 pt-5 lg:px-6 lg:pb-6">
-        <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-80 shrink-0 flex-col rounded-[34px] border border-white/30 bg-white/75 p-5 shadow-glow backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 lg:flex">
+        <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-80 shrink-0 flex-col rounded-[34px] border border-white/30 bg-white/75 p-5 shadow-glow backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 md:flex">
           <Link href="/" className="mb-8 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-comet text-lg font-bold text-white">
               SO
@@ -68,35 +77,54 @@ export function AppShell({
           </Link>
 
           <div className="rounded-[30px] bg-[linear-gradient(160deg,rgba(95,111,255,1),rgba(9,17,31,1))] p-5 text-white shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold">
-                  {initials(viewer.displayName || "Student")}
+            {showSkeleton ? (
+              <div className="animate-pulse space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-14 w-14 rounded-2xl bg-white/15" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-16 rounded bg-white/20" />
+                    <div className="h-5 w-28 rounded bg-white/20" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/60">{isExplore ? "Explore profile" : "Student profile"}</p>
-                  <p className="mt-1 font-display text-2xl font-bold">{viewer.displayName}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="h-20 rounded-2xl bg-white/10" />
+                  <div className="h-20 rounded-2xl bg-white/10" />
                 </div>
+                <div className="h-4 w-full rounded bg-white/10" />
               </div>
-              <Badge className="border-white/10 bg-white/10 text-white">{isExplore ? "Browse" : "Live"}</Badge>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold">
+                      {initials(viewer.displayName || "Student")}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.28em] text-white/60">{isExplore ? "Explore profile" : "Student profile"}</p>
+                      <p className="mt-1 font-display text-2xl font-bold">{viewer.displayName}</p>
+                    </div>
+                  </div>
+                  <Badge className="border-white/10 bg-white/10 text-white">{isExplore ? "Browse" : "Live"}</Badge>
+                </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-white/10 p-3">
-                <p className="text-xs uppercase tracking-[0.24em] text-white/55">Focus score</p>
-                <p className="mt-2 font-display text-3xl font-bold">{focusScore}%</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-3">
-                <p className="text-xs uppercase tracking-[0.24em] text-white/55">Coins</p>
-                <p className="mt-2 font-display text-3xl font-bold">{viewer.wallet.coins}</p>
-              </div>
-            </div>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-white/10 p-3">
+                    <p className="text-xs uppercase tracking-[0.24em] text-white/55">Focus score</p>
+                    <p className="mt-2 font-display text-3xl font-bold">{focusScore}%</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-3">
+                    <p className="text-xs uppercase tracking-[0.24em] text-white/55">Coins</p>
+                    <p className="mt-2 font-display text-3xl font-bold">{viewer.wallet.coins}</p>
+                  </div>
+                </div>
 
-            <p className="mt-4 text-sm text-white/72">
-              {isExplore
-                ? "See the full student experience. Sign in when you want your own data, rooms, and competition."
-                : "Your workspace is live. Keep your plan visible, your sessions honest, and your momentum strong."}
-            </p>
+                <p className="mt-4 text-sm text-white/72">
+                  {isExplore
+                    ? "See the full student experience. Sign in when you want your own data, rooms, and competition."
+                    : "Your workspace is live. Keep your plan visible, your sessions honest, and your momentum strong."}
+                </p>
+              </>
+            )}
           </div>
 
           <div className="mt-5 rounded-[28px] border border-slate-200/80 bg-white/85 p-4 dark:border-white/10 dark:bg-white/5">
@@ -134,7 +162,7 @@ export function AppShell({
                   </div>
                   <span className="text-sm font-semibold">Today&apos;s blocks</span>
                 </div>
-                <span className="font-display text-2xl font-bold">{todayBlocks}</span>
+                <span className="font-display text-2xl font-bold" suppressHydrationWarning>{todayBlocks}</span>
               </div>
             </div>
           </div>
@@ -212,7 +240,7 @@ export function AppShell({
                 className="flex-1 bg-white text-ink hover:bg-white/90"
                 onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
               >
-                {resolvedTheme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                {mounted && resolvedTheme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                 Theme
               </Button>
               {isExplore ? (
@@ -231,7 +259,7 @@ export function AppShell({
           </div>
         </aside>
 
-        <div className="flex-1">
+        <div id="main-content" className="flex-1">
           <header className="mb-6 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-comet">Study operating system</p>
@@ -250,7 +278,7 @@ export function AppShell({
               className="rounded-2xl border border-white/10 bg-white/70 p-3 shadow-glow backdrop-blur-xl dark:bg-slate-950/70 lg:hidden"
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             >
-              {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {mounted && resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
           </header>
 
@@ -271,9 +299,9 @@ export function AppShell({
         </div>
       </div>
 
-      <nav className="fixed inset-x-4 bottom-4 z-50 rounded-[28px] border border-white/10 bg-white/80 p-2 shadow-glow backdrop-blur-xl dark:bg-slate-950/80 lg:hidden">
-        <div className="grid grid-cols-4 gap-2">
-          {primaryNavItems.map((item) => {
+      <nav className="fixed inset-x-4 bottom-4 z-50 rounded-[28px] border border-white/10 bg-white/80 p-2 shadow-glow backdrop-blur-xl dark:bg-slate-950/80 md:hidden">
+        <div className="grid grid-cols-5 gap-1">
+          {[...primaryNavItems, { href: "/leaderboard", label: "Board", icon: Medal }].map((item) => {
             const Icon = item.icon;
             const active = pathname.startsWith(item.href);
 
@@ -282,7 +310,7 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-2xl px-2 py-3 text-[11px] font-semibold",
+                  "flex flex-col items-center gap-1 rounded-2xl px-1 py-3 text-[10px] font-semibold",
                   active ? "bg-comet text-white" : "text-slate-600 dark:text-slate-300"
                 )}
               >
@@ -293,6 +321,8 @@ export function AppShell({
           })}
         </div>
       </nav>
+
+      <FloatingCoach />
     </div>
   );
 }

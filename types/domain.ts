@@ -132,6 +132,10 @@ export interface RoomMember {
   name: string;
   currentTask: string;
   joinedAt: number;
+  lastLeftAt?: number | null;
+  isOnline?: boolean;
+  totalTimePreviously?: number;
+  lastActiveDay?: string;
 }
 
 export interface RoomDoc {

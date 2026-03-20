@@ -5,11 +5,20 @@ import { CheckCircle2, Clock3, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Button, Card, SectionHeading, Badge } from "@/components/ui";
+import { EmptyState } from "@/components/empty-state";
 import { formatMinutes } from "@/lib/utils";
 import { completeSession, generateDailyPlan, missSession, startSession } from "@/services/study-service";
 import type { DailyPlanDoc, TaskDoc } from "@/types/domain";
 
-function buildWeekTabs(): string[] {
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+interface WeekDay {
+  iso: string;
+  weekday: string;
+  dayNum: number;
+}
+
+function buildWeekTabs(): WeekDay[] {
   const base = new Date();
   const day = base.getDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
@@ -19,7 +28,11 @@ function buildWeekTabs(): string[] {
   return Array.from({ length: 7 }, (_, index) => {
     const current = new Date(monday);
     current.setDate(monday.getDate() + index);
-    return current.toISOString().slice(0, 10);
+    return {
+      iso: current.toISOString().slice(0, 10),
+      weekday: SHORT_DAYS[current.getDay()]!,
+      dayNum: current.getDate()
+    };
   });
 }
 
@@ -32,11 +45,16 @@ export function PlannerBoard({
 }) {
   const { user } = useAuth();
   const weekTabs = useMemo(() => buildWeekTabs(), []);
-  const [selectedDay, setSelectedDay] = useState(weekTabs[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeEndTime, setActiveEndTime] = useState<string | null>(null);
   const [countdownLabel, setCountdownLabel] = useState("00:00:00");
   const [generatingPlan, setGeneratingPlan] = useState(false);
+
+  useEffect(() => {
+    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    setSelectedDay(weekTabs[todayIndex]?.iso ?? weekTabs[0]?.iso ?? null);
+  }, [weekTabs]);
 
   useEffect(() => {
     if (!activeEndTime) {
@@ -68,12 +86,12 @@ export function PlannerBoard({
 
     await startSession({
       taskId,
-      sessionId: `${selectedDay}-${taskId}`,
-      plannedDate: selectedDay,
+      sessionId: `${selectedDay ?? ""}-${taskId}`,
+      plannedDate: selectedDay ?? "",
       startTime,
       endTime
     });
-    setActiveSessionId(`${selectedDay}-${taskId}`);
+    setActiveSessionId(`${selectedDay ?? ""}-${taskId}`);
     setActiveEndTime(endTime);
     toast.success("Session started. The clock is now against you.");
   };
@@ -89,7 +107,7 @@ export function PlannerBoard({
     await completeSession(activeSessionId, taskId);
     setActiveSessionId(null);
     setActiveEndTime(null);
-    toast.success("Task completed. Coins processed.");
+    toast.success("🎉 Task completed! +25 coins earned. Keep this streak alive.");
   };
 
   const handleMiss = async (taskId: string) => {
@@ -114,7 +132,7 @@ export function PlannerBoard({
 
     try {
       setGeneratingPlan(true);
-      const result = await generateDailyPlan(selectedDay);
+      const result = await generateDailyPlan(selectedDay ?? undefined);
       toast.success(
         result.blockCount > 0
           ? `Generated ${result.blockCount} study block${result.blockCount === 1 ? "" : "s"} for ${result.date}.`
@@ -138,16 +156,16 @@ export function PlannerBoard({
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
           {weekTabs.map((day) => (
             <button
-              key={day}
+              key={day.iso}
               className={`rounded-2xl px-3 py-4 text-left text-sm font-semibold transition ${
-                selectedDay === day
+                selectedDay === day.iso
                   ? "bg-comet text-white"
                   : "bg-white/70 text-slate-700 hover:bg-white dark:bg-white/10 dark:text-slate-200"
               }`}
-              onClick={() => setSelectedDay(day)}
+              onClick={() => setSelectedDay(day.iso)}
             >
-              <p>{new Date(day).toLocaleDateString(undefined, { weekday: "short" })}</p>
-              <p className="mt-1 text-xs opacity-80">{day.slice(5)}</p>
+              <p>{day.weekday}</p>
+              <p className="mt-1 text-xs opacity-80">{day.dayNum}</p>
             </button>
           ))}
         </div>
@@ -157,7 +175,7 @@ export function PlannerBoard({
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.32em] text-comet">Today&apos;s time blocks</p>
-            <h3 className="mt-2 font-display text-2xl font-bold">{selectedDay}</h3>
+            <h3 className="mt-2 font-display text-2xl font-bold" suppressHydrationWarning>{selectedDay}</h3>
           </div>
           <div className="flex items-center gap-3">
             <Button disabled={generatingPlan} onClick={() => void handleGeneratePlan()} variant="ghost">
@@ -169,9 +187,12 @@ export function PlannerBoard({
 
         <div className="space-y-4">
           {blocks.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-white/10 px-5 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-              No AI plan exists for this day yet. Generate one manually from your current unfinished tasks.
-            </div>
+            <EmptyState
+              title={`No plan for ${selectedDay}`}
+              description="No AI plan exists for this day yet. Generate one manually from your current unfinished tasks."
+              ctaLabel={generatingPlan ? "Generating..." : "Generate day's plan"}
+              ctaAction={() => void handleGeneratePlan()}
+            />
           ) : (
             blocks.map((block) => {
               const task = tasks.find((entry) => entry.id === block.taskId);
