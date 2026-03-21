@@ -25,21 +25,21 @@ export function StudentProfileCard({ profile }: { profile: AppUserProfile | null
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
           <p className="text-sm text-slate-500 dark:text-slate-400">Name</p>
           <p className="mt-2 font-display text-2xl font-bold">{profile.displayName}</p>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
           <p className="text-sm text-slate-500 dark:text-slate-400">Email</p>
           <p className="mt-2 break-all font-semibold">{profile.email}</p>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
           <p className="text-sm text-slate-500 dark:text-slate-400">Role</p>
           <div className="mt-2">
-            <Badge className="bg-comet text-white">{profile.role}</Badge>
+            <Badge className="bg-indigo-600 text-white border-transparent">{profile.role}</Badge>
           </div>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
           <p className="text-sm text-slate-500 dark:text-slate-400">Notifications</p>
           <p className="mt-2 font-display text-2xl font-bold">
             {profile.preferences.notificationsEnabled ? "Enabled" : "Off"}

@@ -157,10 +157,10 @@ export function PlannerBoard({
           {weekTabs.map((day) => (
             <button
               key={day.iso}
-              className={`rounded-2xl px-3 py-4 text-left text-sm font-semibold transition ${
+              className={`rounded-xl px-3 py-4 text-left text-sm font-medium transition-all duration-200 ${
                 selectedDay === day.iso
-                  ? "bg-comet text-white"
-                  : "bg-white/70 text-slate-700 hover:bg-white dark:bg-white/10 dark:text-slate-200"
+                  ? "bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-[#050505]"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 dark:bg-slate-900/50 dark:border-white/5 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               }`}
               onClick={() => setSelectedDay(day.iso)}
             >
@@ -174,8 +174,8 @@ export function PlannerBoard({
       <Card className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-comet">Today&apos;s time blocks</p>
-            <h3 className="mt-2 font-display text-2xl font-bold" suppressHydrationWarning>{selectedDay}</h3>
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Today&apos;s time blocks</p>
+            <h3 className="mt-2 font-display text-2xl font-bold text-slate-900 dark:text-white" suppressHydrationWarning>{selectedDay}</h3>
           </div>
           <div className="flex items-center gap-3">
             <Button disabled={generatingPlan} onClick={() => void handleGeneratePlan()} variant="ghost">
@@ -201,7 +201,11 @@ export function PlannerBoard({
               return (
                 <div
                   key={`${selectedDay}-${block.taskId}`}
-                  className="rounded-[28px] border border-white/10 bg-white/70 p-5 dark:bg-white/5"
+                  className={`rounded-2xl border bg-white p-5 transition-all duration-200 dark:bg-slate-900 ${
+                    active 
+                      ? "border-indigo-500 ring-1 ring-indigo-500 shadow-md" 
+                      : "border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 hover:shadow-sm"
+                  }`}
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-2">

@@ -94,10 +94,12 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <AppShell
-      title="Analytics"
-      subtitle="The premium dashboard for study density, focus timing, failure patterns, and your weekly AI report card."
-    >
+    <div className="mx-auto max-w-5xl">
+      <header className="mb-8 max-w-2xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Deep Insights</p>
+        <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Analytics</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">The premium dashboard for study density, focus timing, failure patterns, and your weekly AI report card.</p>
+      </header>
       <ProGate>
         <div className="grid gap-6">
           <section className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
@@ -115,14 +117,14 @@ export default function AnalyticsPage() {
                 title={`${focusScore}%`}
                 description="Completed sessions divided by planned sessions, recalculated client-side from Firestore."
               />
-              <div className="flex items-center gap-3 rounded-3xl bg-white/70 px-4 py-5 dark:bg-white/5">
-                {focusScore >= 70 ? <ArrowUpRight className="h-5 w-5 text-aurora" /> : <ArrowDownRight className="h-5 w-5 text-ember" />}
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 dark:border-white/5 dark:bg-slate-800/50">
+                {focusScore >= 70 ? <ArrowUpRight className="h-5 w-5 text-emerald-500" /> : <ArrowDownRight className="h-5 w-5 text-rose-500" />}
                 <p className="text-sm text-slate-600 dark:text-slate-300">
                   {focusScore >= 70 ? "You are holding your line more often than not." : "Your plan is still winning on paper only."}
                 </p>
               </div>
-              <div className="rounded-3xl bg-white/70 p-4 dark:bg-white/5">
-                <p className="text-sm font-semibold">Worst failure slots</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Worst failure slots</p>
                 <div className="mt-3 space-y-2">
                   {worstSlots.map((slot) => (
                     <div key={slot.hour} className="flex items-center justify-between text-sm">
@@ -149,7 +151,7 @@ export default function AnalyticsPage() {
                     <XAxis dataKey="hour" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="minutes" fill="#8ee3c1" radius={[10, 10, 0, 0]} />
+                    <Bar dataKey="minutes" fill="#34d399" radius={[10, 10, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -165,7 +167,7 @@ export default function AnalyticsPage() {
                   {generatingInsight ? "Generating..." : "Generate weekly insight"}
                 </Button>
               </div>
-              <div className="rounded-3xl bg-slate-950 p-5 text-sm text-white dark:bg-white/10">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-800 dark:border-white/5 dark:bg-slate-800/50 dark:text-slate-200">
                 <p className="whitespace-pre-wrap">
                   {latestInsight?.report ??
                     "No weekly insight generated yet. Use the button above to create one from your recent sessions."}
@@ -175,6 +177,6 @@ export default function AnalyticsPage() {
           </section>
         </div>
       </ProGate>
-    </AppShell>
+    </div>
   );
 }

@@ -58,13 +58,16 @@ export default function DashboardPage() {
   const firstName = displayName.split(" ")[0];
 
   return (
-    <AppShell
-      title="Dashboard"
-      subtitle="Your daily command center — one glance, one action, full momentum."
-    >
+    <div className="mx-auto max-w-5xl">
+      <header className="mb-8 max-w-2xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Command Center</p>
+        <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your daily command center — one glance, one action, full momentum.</p>
+      </header>
+
       <div className="grid gap-6">
         {/* ── Hero Card ── */}
-        <section className="overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,rgba(9,17,31,0.97),rgba(28,42,79,0.92),rgba(95,111,255,0.82))] p-6 text-white shadow-glow md:p-8">
+        <section className="overflow-hidden rounded-2xl bg-slate-900 bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(49,46,129,0.95),rgba(79,70,229,0.9))] p-6 text-white shadow-md md:p-8">
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3 text-center sm:text-left">
               <p className="text-sm font-semibold text-white/60">
@@ -93,26 +96,26 @@ export default function DashboardPage() {
         {/* ── Quick Stats Row ── */}
         <section className="grid gap-4 sm:grid-cols-3">
           <Card className="flex items-center gap-4">
-            <div className="rounded-2xl bg-comet/10 p-3">
-              <Target className="h-5 w-5 text-comet" />
+            <div className="rounded-xl bg-indigo-50 p-3 dark:bg-indigo-500/10">
+              <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Active tasks</p>
-              <h3 className="font-display text-2xl font-bold">{activeTasks}</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Active tasks</p>
+              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{activeTasks}</h3>
             </div>
           </Card>
           <Card className="flex items-center gap-4">
-            <div className="rounded-2xl bg-ember/10 p-3">
-              <TrendingUp className="h-5 w-5 text-ember" />
+            <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-500/10">
+              <TrendingUp className="h-5 w-5 text-rose-600 dark:text-rose-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Sessions done</p>
-              <h3 className="font-display text-2xl font-bold">{completedSessions}<span className="text-sm font-normal text-slate-400">/{visibleSessions.length}</span></h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Sessions done</p>
+              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{completedSessions}<span className="text-sm font-medium text-slate-400 ml-1">/{visibleSessions.length}</span></h3>
             </div>
           </Card>
           <Card className="flex items-center gap-4">
-            <div className="rounded-2xl bg-aurora/10 p-3">
-              <Coins className="h-5 w-5 text-aurora" />
+            <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/10">
+              <Coins className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Coins banked</p>
@@ -149,20 +152,20 @@ export default function DashboardPage() {
               description="StudyOS watches your execution and adapts your plan in real-time."
             />
             <div className="space-y-3">
-              <div className="rounded-2xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
-                <p className="font-semibold">Session reminders</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
+                <p className="font-semibold text-slate-900 dark:text-white">Session reminders</p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                   Push nudges fire 15 minutes before a planned session.
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
-                <p className="font-semibold">Failure pressure</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
+                <p className="font-semibold text-slate-900 dark:text-white">Failure pressure</p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                   Misses trigger automatic rescheduling and coaching interventions.
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/70 p-4 dark:bg-white/5">
-                <p className="font-semibold">Coin stakes</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
+                <p className="font-semibold text-slate-900 dark:text-white">Coin stakes</p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                   Complete tasks to earn. Miss sessions and the system deducts.
                 </p>
@@ -171,6 +174,6 @@ export default function DashboardPage() {
           </Card>
         </section>
       </div>
-    </AppShell>
+    </div>
   );
 }

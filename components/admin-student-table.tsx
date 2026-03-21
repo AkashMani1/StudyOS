@@ -109,9 +109,9 @@ export function AdminStudentTable({ rows }: { rows: StudentAdminRow[] }) {
           </thead>
           <tbody>
             {filteredRows.map((row) => (
-              <tr key={row.uid} className="border-t border-white/10">
-                <td className="py-4 font-semibold">{row.name}</td>
-                <td className="py-4">{row.email}</td>
+              <tr key={row.uid} className="border-t border-slate-200 dark:border-white/5">
+                <td className="py-4 font-semibold text-slate-900 dark:text-slate-100">{row.name}</td>
+                <td className="py-4 text-slate-600 dark:text-slate-300">{row.email}</td>
                 <td className="py-4">{row.completionPercentage}%</td>
                 <td className="py-4">{row.streak}</td>
                 <td className="py-4">{row.coins}</td>

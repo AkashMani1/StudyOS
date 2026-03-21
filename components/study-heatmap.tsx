@@ -5,10 +5,10 @@ import type { StudyHeatCell } from "@/types/domain";
 
 function colorForHours(hours: number): string {
   if (hours <= 0) return "rgba(148, 163, 184, 0.18)";
-  if (hours < 1) return "rgba(95, 111, 255, 0.32)";
-  if (hours < 2) return "rgba(95, 111, 255, 0.5)";
-  if (hours < 3) return "rgba(142, 227, 193, 0.62)";
-  return "rgba(255, 123, 84, 0.78)";
+  if (hours < 1) return "rgba(99, 102, 241, 0.32)"; // indigo-500 light
+  if (hours < 2) return "rgba(99, 102, 241, 0.6)";  // indigo-500 medium
+  if (hours < 3) return "rgba(52, 211, 153, 0.62)"; // emerald-400
+  return "rgba(244, 63, 94, 0.78)";                 // rose-500
 }
 
 export function StudyHeatmap({ data }: { data: StudyHeatCell[] }) {
@@ -30,7 +30,7 @@ export function StudyHeatmap({ data }: { data: StudyHeatCell[] }) {
               y={dayIndex * (cellSize + 8)}
               width={cellSize}
               height={cellSize}
-              rx={10}
+              rx={6}
               fill={colorForHours(cell.hours)}
             />
             <title>{`${cell.dayLabel}: ${cell.hours.toFixed(1)} hours`}</title>

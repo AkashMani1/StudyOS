@@ -86,8 +86,8 @@ export function PlanRealityWidget({
               <XAxis dataKey="day" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="plannedHours" fill="#5f6fff" radius={[10, 10, 0, 0]} />
-              <Bar dataKey="actualHours" fill="#8ee3c1" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="plannedHours" fill="#6366f1" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="actualHours" fill="#34d399" radius={[10, 10, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -112,7 +112,7 @@ export function PlanRealityWidget({
                   nameKey="name"
                   innerRadius={50}
                   outerRadius={90}
-                  fill="#ff7b54"
+                  fill="#f43f5e"
                 />
                 <Tooltip formatter={(value) => `${value}%`} />
               </PieChart>
@@ -132,7 +132,7 @@ export function PlanRealityWidget({
               missedSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm dark:bg-white/5"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-white/5 dark:bg-slate-800/50"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-semibold">{session.missedReason ?? "Unlabeled miss"}</p>

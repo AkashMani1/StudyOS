@@ -149,11 +149,13 @@ export default async function AdminPage() {
   const rows = await getAdminRows(profile.instituteId);
 
   return (
-    <AppShell
-      title="Institute Admin"
-      subtitle="A separate admin view for institute operators to inspect students, filter performance, and export CSV snapshots."
-    >
+    <div className="mx-auto max-w-7xl">
+      <header className="mb-8 max-w-3xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Administration</p>
+        <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Institute Admin</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">A separate admin view for institute operators to inspect students, filter performance, and export CSV snapshots.</p>
+      </header>
       <AdminStudentTable rows={rows} />
-    </AppShell>
+    </div>
   );
 }

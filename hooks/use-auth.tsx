@@ -73,7 +73,7 @@ function createFallbackProfile(user: User, session: SessionPayload | null): AppU
 
 async function syncSession(user: User | null): Promise<SessionPayload | null> {
   if (!user) {
-    await fetch("/api/session/logout", { method: "POST" });
+    await fetch("/api/session/logout", { method: "POST" }).catch(() => null);
     return null;
   }
 
@@ -84,9 +84,9 @@ async function syncSession(user: User | null): Promise<SessionPayload | null> {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ idToken })
-  });
+  }).catch(() => null);
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
     return null;
   }
 
@@ -149,10 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!unsubscribeProfile) {
           setLoading(true);
           const profileRef = doc(db, "users", nextUser.uid);
+          setLoading(false);
           unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
             const nextProfile = snapshot.data() as AppUserProfile | undefined;
             setProfile(nextProfile ?? createFallbackProfile(nextUser, existingSession));
-            setLoading(false);
           });
           profileListenerUid = nextUser.uid;
         }
@@ -190,10 +190,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      setLoading(false);
       unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
         const nextProfile = snapshot.data() as AppUserProfile | undefined;
         setProfile(nextProfile ?? createFallbackProfile(nextUser, nextSession));
-        setLoading(false);
       });
       profileListenerUid = nextUser.uid;
     });

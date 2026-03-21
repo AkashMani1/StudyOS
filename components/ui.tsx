@@ -16,7 +16,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-[28px] border border-white/10 bg-white/70 p-5 shadow-glow backdrop-blur-xl dark:bg-slate-950/70",
+        "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-slate-900/50",
         className
       )}
       {...props}
@@ -32,16 +32,16 @@ export function Button({
   variant?: "primary" | "secondary" | "ghost" | "danger";
 }) {
   const variantStyles = {
-    primary: "bg-comet text-white hover:bg-comet/90",
-    secondary: "bg-aurora text-ink hover:bg-aurora/90",
-    ghost: "bg-white/70 text-slate-900 hover:bg-white dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
-    danger: "bg-ember text-white hover:bg-ember/90"
+    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm",
+    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20",
+    ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white",
+    danger: "bg-red-500 text-white hover:bg-red-600 shadow-sm"
   };
 
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-comet focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
+        "inline-flex min-h-[44px] items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#050505]",
         variantStyles[variant],
         className
       )}
@@ -55,7 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cn(
-        "w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-comet focus:ring-4 focus:ring-comet/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
+        "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500",
         className
       )}
       {...props}
@@ -70,7 +70,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     <textarea
       ref={ref}
       className={cn(
-        "min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-comet focus:ring-4 focus:ring-comet/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400",
+        "min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500",
         className
       )}
       {...props}
@@ -87,7 +87,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border border-white/10 bg-white/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-700 dark:bg-white/10 dark:text-slate-200",
+        "inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:border-white/5 dark:bg-slate-800 dark:text-slate-300",
         className
       )}
     >

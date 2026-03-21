@@ -126,41 +126,35 @@ export default function LeaderboardPage() {
   const meIndex = sorted.findIndex((r) => r.uid === user?.uid);
 
   return (
-    <AppShell
-      title="Leaderboard"
-      subtitle="Weekly ranking board — reads from Firebase instantly. Refresh to recompute from Firestore data."
-    >
+    <div className="mx-auto max-w-5xl">
+      <header className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 max-w-3xl">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Weekly Rankings</p>
+          <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Leaderboard</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : "Reads from Firebase instantly."}
+          </p>
+        </div>
+        <button
+          onClick={() => void load(true)}
+          disabled={loading}
+          className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-60"
+        >
+          <RefreshCw className={`h-4 w-4 text-indigo-600 dark:text-indigo-400 ${loading ? "animate-spin" : ""}`} />
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </header>
       <ProGate>
-        <div className="max-w-3xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-comet mb-1">Weekly Rankings</p>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Top Scholars</h2>
-              {lastUpdated && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Last updated {lastUpdated.toLocaleTimeString()}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={() => void load(true)}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-60"
-            >
-              <RefreshCw className={`h-4 w-4 text-comet ${loading ? "animate-spin" : ""}`} />
-              {loading ? "Loading..." : "Refresh"}
-            </button>
-          </div>
+        <div className="max-w-3xl space-y-8">
 
           {/* User is outside top 10 */}
           {meIndex >= 10 && user && (
-            <div className="rounded-2xl border border-comet/30 bg-comet/10 px-5 py-4 flex items-center justify-between">
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 dark:border-indigo-500/30 dark:bg-indigo-500/10 px-5 py-4 flex items-center justify-between shadow-sm">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-comet mb-0.5">Your Position</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-0.5">Your Position</p>
                 <p className="font-semibold text-slate-800 dark:text-slate-200">{sorted[meIndex]?.displayName}</p>
               </div>
-              <p className="font-black text-3xl text-comet">#{meIndex + 1}</p>
+              <p className="font-display font-bold text-3xl text-indigo-600 dark:text-indigo-400">#{meIndex + 1}</p>
             </div>
           )}
 
@@ -177,22 +171,22 @@ export default function LeaderboardPage() {
                   initial={{ y: 16, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.04 }}
-                  className={`flex items-center gap-4 rounded-3xl border p-4 md:p-5 transition-all ${
+                  className={`flex items-center gap-4 rounded-xl border p-4 md:p-5 transition-all duration-200 ${
                     isMe && !isTop
-                      ? "border-comet/40 bg-comet/10 shadow-[0_0_20px_rgba(99,102,241,0.15)] ring-1 ring-comet/20"
+                      ? "border-indigo-200 bg-indigo-50 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/10"
                       : isTop
-                        ? "border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/5 shadow-[0_0_30px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20"
-                        : "border-slate-200 dark:border-white/5 bg-white dark:bg-white/5 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                        ? "border-amber-400/50 bg-amber-50 shadow-sm dark:border-amber-500/50 dark:bg-amber-500/10 ring-1 ring-amber-400"
+                        : "border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md"
                   }`}
                 >
                   {/* Rank badge */}
-                  <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-2xl font-black text-sm ${
+                  <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl font-bold text-sm ${
                     isTop
-                      ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.5)]"
+                      ? "bg-amber-500 text-white shadow-sm"
                       : isSilver
-                        ? "bg-gradient-to-br from-slate-300 to-slate-400 text-white shadow-md"
+                        ? "bg-slate-400 text-white shadow-sm"
                         : isBronze
-                          ? "bg-gradient-to-br from-amber-700 to-amber-600 text-white shadow-md"
+                          ? "bg-amber-700 text-white shadow-sm"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                   }`}>
                     {isTop ? <Trophy className="h-5 w-5" /> : isSilver ? <Medal className="h-5 w-5" /> : index + 1}
@@ -208,12 +202,12 @@ export default function LeaderboardPage() {
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className={`font-bold text-base truncate ${
                         isTop ? "text-amber-700 dark:text-amber-400"
-                          : isMe ? "text-comet dark:text-indigo-300"
+                          : isMe ? "text-indigo-600 dark:text-indigo-400"
                             : "text-slate-900 dark:text-slate-100"
                       }`}>
                         {row.displayName}
                       </p>
-                      {isMe && <span className="shrink-0 text-xs font-bold bg-comet text-white px-2 py-0.5 rounded-full">You</span>}
+                      {isMe && <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-md">You</span>}
                     </div>
                     <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {row.streak > 0 && <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" />{row.streak}d streak</span>}
@@ -238,13 +232,13 @@ export default function LeaderboardPage() {
             })}
 
             {topTen.length === 0 && !loading && (
-              <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-3xl">
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No scholars ranked yet. Click Refresh to compute the first ranking!</p>
+              <div className="text-center py-16 border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No scholars ranked yet. Click Refresh to compute the first ranking!</p>
               </div>
             )}
           </div>
         </div>
       </ProGate>
-    </AppShell>
+    </div>
   );
 }

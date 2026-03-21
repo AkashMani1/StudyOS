@@ -202,11 +202,11 @@ export function RoomsPanel() {
   return (
     <div className="grid gap-6 lg:grid-cols-[340px,1fr] h-[min(800px,calc(100vh-140px))]">
       {/* Sidebar Navigation */}
-      <Card className="flex flex-col h-full overflow-hidden p-0 bg-white/40 dark:bg-slate-950/40 border-white/5 backdrop-blur-3xl shadow-2xl relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent dark:from-white/5 pointer-events-none" />
-        <div className="p-5 border-b border-slate-200/50 dark:border-white/10 shrink-0 bg-white/60 dark:bg-black/20 relative z-10">
+      <Card className="flex flex-col h-full overflow-hidden p-0 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 shadow-sm relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-50/60 to-transparent dark:from-white/5 pointer-events-none" />
+        <div className="p-5 border-b border-slate-200 dark:border-white/5 shrink-0 bg-white dark:bg-slate-900 relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-comet to-indigo-500">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
               Study Lobbies
             </h2>
           </div>
@@ -215,13 +215,13 @@ export function RoomsPanel() {
               value={roomName} 
               onChange={(e) => setRoomName(e.target.value)} 
               placeholder="Create a new room..." 
-              className="shadow-inner bg-white/70 dark:bg-black/40 ring-0 focus:ring-comet h-10" 
+              className="shadow-sm bg-slate-50 dark:bg-slate-800 ring-0 focus:ring-indigo-500 h-10 border-slate-200 dark:border-white/5" 
             />
             <Button 
               variant="primary" 
               disabled={creatingRoom || !roomName.trim()} 
               onClick={() => void handleCreateRoom()} 
-              className="h-10 w-10 p-0 rounded-2xl shrink-0 font-bold bg-comet hover:bg-comet/90 transition-transform"
+              className="h-10 w-10 p-0 rounded-xl shrink-0 font-bold bg-indigo-600 hover:bg-indigo-700 transition-transform shadow-sm"
             >
               <Plus className="h-5 w-5" />
             </Button>
@@ -231,21 +231,21 @@ export function RoomsPanel() {
         <div className="flex-1 overflow-y-auto p-4 space-y-8 relative z-10 custom-scrollbar">
           {myRooms.length > 0 && (
             <div className="space-y-3">
-              <p className="px-2 text-xs font-bold uppercase tracking-widest text-comet dark:text-comet flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-comet animate-pulse" /> Your Lobbies
+              <p className="px-2 text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" /> Your Lobbies
               </p>
               {myRooms.map(room => (
                 <button
                   key={room.id}
                   onClick={() => setSelectedRoomId(room.id)}
-                  className={`w-full text-left rounded-3xl px-4 py-4 transition-all duration-300 relative overflow-hidden group ${
+                  className={`w-full text-left rounded-xl px-4 py-4 transition-all duration-200 relative overflow-hidden group ${
                     selectedRoomId === room.id
-                      ? "bg-gradient-to-r from-comet/20 to-indigo-500/10 border border-comet/30 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                      : "hover:bg-white/90 dark:hover:bg-white/10 border border-slate-200/50 dark:border-transparent bg-white/60 dark:bg-white/5"
+                      ? "bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 shadow-sm"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"
                   }`}
                 >
                   <div className="flex flex-col gap-1.5 relative z-10">
-                    <p className={`font-bold transition-colors ${selectedRoomId === room.id ? "text-comet dark:text-indigo-300" : "text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
+                    <p className={`font-bold transition-colors ${selectedRoomId === room.id ? "text-indigo-700 dark:text-indigo-300" : "text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
                       {room.name}
                     </p>
                     <div className="flex items-center justify-between">
@@ -278,14 +278,14 @@ export function RoomsPanel() {
               <button
                 key={room.id}
                 onClick={() => setSelectedRoomId(room.id)}
-                className={`w-full text-left rounded-3xl px-4 py-4 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full text-left rounded-xl px-4 py-4 transition-all duration-200 relative overflow-hidden group ${
                   selectedRoomId === room.id
-                    ? "bg-gradient-to-r from-comet/20 to-indigo-500/10 border border-comet/30 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                    : "hover:bg-white/90 dark:hover:bg-white/10 border border-slate-200/50 dark:border-transparent bg-white/60 dark:bg-white/5"
+                    ? "bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 shadow-sm"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50"
                 }`}
               >
                 <div className="flex flex-col gap-1.5 relative z-10">
-                  <p className={`font-bold transition-colors line-clamp-1 ${selectedRoomId === room.id ? "text-comet dark:text-indigo-300" : "text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
+                  <p className={`font-bold transition-colors line-clamp-1 ${selectedRoomId === room.id ? "text-indigo-700 dark:text-indigo-300" : "text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
                     {room.name}
                   </p>
                   <div className="flex items-center justify-between">
@@ -302,7 +302,7 @@ export function RoomsPanel() {
       </Card>
 
       {/* Main Panel Content */}
-      <Card className="relative flex flex-col h-full overflow-hidden p-0 border-white/5 bg-white/60 dark:bg-slate-950/60 backdrop-blur-3xl shadow-2xl">
+      <Card className="relative flex flex-col h-full overflow-hidden p-0 border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm">
         {selectedRoom ? (
           <>
             {/* Dynamic Header Banner */}
@@ -326,16 +326,16 @@ export function RoomsPanel() {
             <div className="flex-1 relative overflow-y-auto bg-slate-50/60 dark:bg-black/20 p-4 md:p-8 custom-scrollbar">
               
               {!selectedRoom.members?.[user?.uid ?? ""] && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 backdrop-blur-xl bg-white/40 dark:bg-slate-950/60">
-                  <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] text-center max-w-sm w-full border border-white/50 dark:border-white/10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-comet/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-50/90 dark:bg-[#050505]/90 backdrop-blur-md">
+                  <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-lg border border-slate-200 dark:border-white/5 text-center max-w-sm w-full relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
                     <div className="relative z-10">
-                      <div className="w-20 h-20 mx-auto bg-comet/10 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-comet/5">
-                        <LockOpen className="h-10 w-10 text-comet drop-shadow-md" />
+                      <div className="w-20 h-20 mx-auto bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 shadow-sm ring-1 ring-indigo-500/20">
+                        <LockOpen className="h-10 w-10 text-indigo-600 dark:text-indigo-400" />
                       </div>
-                      <h2 className="text-2xl font-black mb-3 text-slate-800 dark:text-white">Ready to Focus?</h2>
+                      <h2 className="text-2xl font-bold mb-3 text-slate-800 dark:text-white">Ready to Focus?</h2>
                       <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed">Join {Object.keys(selectedRoom.members ?? {}).length} others grinding locally. Time pauses dynamically across tabs.</p>
-                      <Button disabled={joiningRoomId === selectedRoom.id} onClick={() => void handleJoin(selectedRoom.id)} className="w-full text-lg py-7 bg-gradient-to-r from-comet to-indigo-500 hover:from-comet/90 hover:to-indigo-500/90 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all hover:scale-[1.02] rounded-2xl font-bold border-0 text-white">
+                      <Button disabled={joiningRoomId === selectedRoom.id} onClick={() => void handleJoin(selectedRoom.id)} className="w-full text-base py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-xl font-semibold text-white shadow-sm border-0">
                         {joiningRoomId === selectedRoom.id ? "Connecting..." : <span className="flex items-center justify-center">Join the Grind <ArrowRight className="ml-2 h-5 w-5" /></span>}
                       </Button>
                     </div>
@@ -357,17 +357,17 @@ export function RoomsPanel() {
                     const isTop = index === 0 && sortScore > 0;
                     return (
                       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: index * 0.05 }} key={uid} 
-                        className={`flex items-center justify-between rounded-3xl border ${
+                        className={`flex items-center justify-between rounded-2xl border ${
                           isTop 
-                          ? "border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/5 shadow-[0_0_30px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20" 
-                          : "border-slate-200 dark:border-white/5 bg-white dark:bg-white/5 shadow-lg hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+                          ? "border-amber-400/50 bg-amber-50 dark:bg-amber-500/10 shadow-sm ring-1 ring-amber-400" 
+                          : "border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all duration-200"
                         } p-4 md:p-5`}
                       >
                         <div className="flex items-center gap-4 md:gap-5 min-w-0">
-                          <div className={`shrink-0 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl font-black ${
+                          <div className={`shrink-0 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl font-bold ${
                             isTop 
-                            ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)]" 
-                            : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                            ? "bg-amber-500 text-white shadow-sm" 
+                            : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 font-semibold"
                           }`}>
                             {isTop ? <Trophy className="h-5 w-5 md:h-6 md:w-6 drop-shadow-sm" /> : index + 1}
                           </div>
@@ -398,7 +398,7 @@ export function RoomsPanel() {
                           <p className={`font-display text-xl md:text-3xl font-black tracking-tighter tabular-nums ${
                             member.isOnline !== false 
                               ? (isTop ? "text-amber-600 dark:text-amber-400" : "text-indigo-600 dark:text-indigo-400") 
-                              : "text-slate-500 dark:text-slate-400"
+                              : "text-slate-400 dark:text-slate-500"
                           }`}>
                             <LiveTimer member={member} />
                           </p>

@@ -1,6 +1,5 @@
 "use client";
 
-import { AppShell } from "@/components/app-shell";
 import { Card, Skeleton } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { PlannerBoard } from "@/components/planner-board";
@@ -15,10 +14,13 @@ export default function PlannerPage() {
   const visibleDailyPlans = user ? dailyPlans : getExploreDailyPlans();
 
   return (
-    <AppShell
-      title="Planner"
-      subtitle="Your AI-generated blocks for today and the next week. Start sessions here, then close the loop with completion or misses."
-    >
+    <div className="mx-auto max-w-5xl">
+      <header className="mb-8 max-w-2xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Study plan</p>
+        <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Planner</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your AI-generated blocks for today and the next week. Start sessions here, then close the loop with completion or misses.</p>
+      </header>
+      
       {user && loading ? (
         <Card className="space-y-4">
           <Skeleton className="h-8 w-48" />
@@ -42,6 +44,6 @@ export default function PlannerPage() {
       ) : (
         <PlannerBoard tasks={visibleTasks} dailyPlans={visibleDailyPlans} />
       )}
-    </AppShell>
+    </div>
   );
 }

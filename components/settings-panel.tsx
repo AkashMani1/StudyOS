@@ -60,17 +60,18 @@ export function SettingsPanel() {
               placeholder="youtube.com, instagram.com"
             />
           </div>
-          <label className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-4 dark:bg-white/5">
-            <span className="text-sm font-semibold">Notifications enabled</span>
-            <input checked={notificationsEnabled} onChange={() => setNotificationsEnabled((value) => !value)} type="checkbox" />
+          <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-white/5 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">Notifications enabled</span>
+            <input className="accent-indigo-600 h-4 w-4" checked={notificationsEnabled} onChange={() => setNotificationsEnabled((value) => !value)} type="checkbox" />
           </label>
-          <label className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-4 dark:bg-white/5">
-            <span className="text-sm font-semibold">Hard mode stake</span>
-            <input checked={hardModeEnabled} onChange={() => setHardModeEnabled((value) => !value)} type="checkbox" />
+          <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-white/5 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">Hard mode stake</span>
+            <input className="accent-indigo-600 h-4 w-4" checked={hardModeEnabled} onChange={() => setHardModeEnabled((value) => !value)} type="checkbox" />
           </label>
-          <label className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-4 dark:bg-white/5">
-            <span className="text-sm font-semibold">Public failure log</span>
+          <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-white/5 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">Public failure log</span>
             <input
+              className="accent-indigo-600 h-4 w-4"
               checked={publicFailureLogEnabled}
               onChange={() => setPublicFailureLogEnabled((value) => !value)}
               type="checkbox"

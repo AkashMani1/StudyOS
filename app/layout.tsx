@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Inter, Outfit } from "next/font/google";
 import "@/app/globals.css";
 import { Providers } from "@/components/providers";
+import { WorkspaceShell } from "@/components/workspace-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -41,8 +42,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
-      <body className="font-body selection:bg-comet/30 selection:text-ink dark:selection:text-white">
-        <Providers>{children}</Providers>
+      <body className="font-body selection:bg-indigo-500/30 selection:text-ink dark:selection:text-white">
+        <Providers>
+          <WorkspaceShell>
+            {children}
+          </WorkspaceShell>
+        </Providers>
       </body>
     </html>
   );
