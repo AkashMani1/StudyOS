@@ -350,24 +350,45 @@ function getStreakFromSessions(sessions: Array<Pick<TaskDoc, "completedAt"> & { 
   return streak;
 }
 
+function getStartOfWeek(): Date {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0-6 (Sun-Sat)
+  const diff = now.getUTCDate() - day + (day === 0 ? -6 : 1); 
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0));
+  return monday;
+}
+
 export async function getLeaderboardRows(): Promise<LeaderboardScore[]> {
+  const startOfWeek = getStartOfWeek();
+  const startOfWeekMs = startOfWeek.getTime();
+
   const usersSnapshot = await adminDb
     .collection("users")
-    .orderBy("wallet.coins", "desc")
-    .limit(50)
+    .orderBy("wallet.coins", "desc") // Still use total coins for initial subset, or just get all active
+    .limit(100)
     .get();
 
   const rows = await Promise.all(
     usersSnapshot.docs.map(async (userDoc) => {
       const user = userDoc.data() as AppUserProfile;
       const [sessionsSnapshot, publicFailureSnapshot] = await Promise.all([
-        userDoc.ref.collection("sessions").limit(30).get(),
+        userDoc.ref.collection("sessions").where("createdAt", ">=", startOfWeek).get(),
         adminDb.collection("publicFailures").doc(userDoc.id).collection(todayIsoDate()).doc("summary").get()
       ]);
+
       const sessions = sessionsSnapshot.docs.map((entry) => entry.data() as {
         completed: boolean;
         completedAt?: { toDate?: () => Date } | null;
       });
+
+      // Calculate Weekly Coins from transactions
+      const weeklyCoins = (user.wallet.transactions || [])
+        .filter((t) => {
+          const ts = (t.timestamp as any)?.toDate?.()?.getTime() || (t.timestamp as any)?.getTime() || 0;
+          return ts >= startOfWeekMs;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+
       const completedTasks = sessions.filter((entry) => entry.completed).length;
       const completionPercentage = sessions.length === 0 ? 0 : Math.round((completedTasks / sessions.length) * 100);
       const publicFailure = publicFailureSnapshot.data() as { missedTasks?: string[] } | undefined;
@@ -375,7 +396,7 @@ export async function getLeaderboardRows(): Promise<LeaderboardScore[]> {
       return {
         uid: userDoc.id,
         displayName: user.displayName,
-        coins: user.wallet.coins,
+        coins: Math.max(0, weeklyCoins), // Fresh score for the week
         completedTasks,
         streak: getStreakFromSessions(
           sessions.map((session) => ({
