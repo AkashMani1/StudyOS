@@ -79,6 +79,17 @@ StudyOS/
 
 ### 1. Web Application Setup
 
+
+🌟 Live Demo: Check out the working application here: [StudyOS](https://study-os-zeta.vercel.app/)
+
+### Local Setup
+If you'd like to run the project locally on your machine, follow these steps:
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/your-username/StudyOS.git](https://github.com/your-username/StudyOS.git)
+   cd StudyOS
+
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/your-username/StudyOS.git
