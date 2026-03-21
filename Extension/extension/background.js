@@ -608,7 +608,7 @@ async function restoreBlockedTabs() {
 async function syncSiteUsageToFirestore() {
   const auth = await getAuthContext();
 
-  if (!auth.uid || !auth.idToken || !auth.projectId || auth.projectId === "YOUR_PROJECT_ID") {
+  if (!auth.uid || !auth.idToken || !auth.projectId) {
     return;
   }
 
@@ -691,7 +691,7 @@ async function refreshFirebaseToken() {
 async function fetchUserDoc() {
   const auth = await getAuthContext();
 
-  if (!auth.uid || !auth.idToken || auth.projectId === "YOUR_PROJECT_ID") {
+  if (!auth.uid || !auth.idToken || !auth.projectId) {
     return null;
   }
 
@@ -716,7 +716,7 @@ async function maybeNotifySessionMiss(previousState) {
   const auth = await getAuthContext();
   let completed = false;
 
-  if (auth.uid && auth.idToken && auth.projectId !== "YOUR_PROJECT_ID") {
+  if (auth.uid && auth.idToken && auth.projectId) {
     const sessionDoc = documentToData(
       await firestoreGet(`users/${auth.uid}/sessions/${previousState.currentSessionId}`, auth.idToken)
     );
@@ -842,7 +842,7 @@ function normalizePlanBlocks(planDoc, dateKey) {
 async function sendUpcomingSessionReminder() {
   const auth = await getAuthContext();
 
-  if (!auth.uid || !auth.idToken || auth.projectId === "YOUR_PROJECT_ID") {
+  if (!auth.uid || !auth.idToken || !auth.projectId) {
     return;
   }
 
@@ -1049,7 +1049,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       const auth = await getAuthContext();
 
-      if (auth.uid && auth.idToken && auth.projectId !== "YOUR_PROJECT_ID") {
+      if (auth.uid && auth.idToken && auth.projectId) {
         await firestoreCreate(
           `users/${auth.uid}/focusOverrides`,
           {

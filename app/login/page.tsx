@@ -30,8 +30,10 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       router.push(redirectTarget);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Google sign-in failed.");
+    } catch (error: any) {
+      if (error?.code !== "auth/popup-closed-by-user" && error?.code !== "auth/cancelled-popup-request") {
+        toast.error("Google sign-in failed. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -45,12 +47,45 @@ export default function LoginPage() {
       if (mode === "login") {
         await signInWithEmail(email, password);
       } else {
-        await signUpWithEmail(name, email, password);
+        try {
+          await signUpWithEmail(name, email, password);
+        } catch (error: any) {
+          // Fast authentication flow: if the user tries to sign up but the email exists,
+          // automatically attempt to log them in to save effort.
+          if (error?.code === "auth/email-already-in-use" || error?.message?.includes("email-already-in-use")) {
+            try {
+              await signInWithEmail(email, password);
+              toast.success("Welcome back! You already had an account.");
+              router.push(redirectTarget);
+              return;
+            } catch (signInError: any) {
+              setMode("login");
+              throw new Error("This email is already registered. Please sign in instead.");
+            }
+          }
+          throw error; // Let other errors bubble up
+        }
       }
 
       router.push(redirectTarget);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Authentication failed.");
+    } catch (error: any) {
+      const code = error?.code || "";
+      const message = error?.message || "";
+      let friendlyMessage = "Authentication failed.";
+      
+      if (code === "auth/invalid-credential" || message.includes("invalid-credential")) {
+        friendlyMessage = mode === "login" ? "Invalid email or password." : "Incorrect password for this existing account.";
+      } else if (code === "auth/user-not-found" || message.includes("user-not-found")) {
+        friendlyMessage = "No account found. Please switch to create account.";
+      } else if (code === "auth/weak-password" || message.includes("weak-password")) {
+        friendlyMessage = "Password should be at least 6 characters.";
+      } else if (code === "auth/too-many-requests" || message.includes("too-many-requests")) {
+        friendlyMessage = "Too many attempts. Please try again later.";
+      } else if (error instanceof Error) {
+        friendlyMessage = error.message.replace(/^Firebase:\s*(Error\s*)?(\(auth\/[a-z-]+\)\.)?\s*/i, "").trim();
+      }
+      
+      toast.error(friendlyMessage);
     } finally {
       setSubmitting(false);
     }
