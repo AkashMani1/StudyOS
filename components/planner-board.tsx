@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Play, XCircle, Plus, Coins, AlertCircle, History, ArrowRight, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { Button, Card, SectionHeading, Badge } from "@/components/ui";
+import { Button, SectionHeading } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
-import { formatMinutes } from "@/lib/utils";
-import { completeSession, generateDailyPlan, missSession, startSession } from "@/services/study-service";
-import type { DailyPlanDoc, TaskDoc } from "@/types/domain";
+import { formatMinutes, cn } from "@/lib/utils";
+import { completeSession, missSession, startSession, rescheduleTask } from "@/services/study-service";
+import { ActiveSessionTimer } from "@/components/active-session-timer";
+import { CreateTaskDialog } from "@/components/create-task-dialog";
+import type { TaskDoc } from "@/types/domain";
 
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -21,6 +23,7 @@ interface WeekDay {
 function buildWeekTabs(): WeekDay[] {
   const base = new Date();
   const day = base.getDay();
+  // Always show Mon-Sun of current week
   const mondayOffset = day === 0 ? -6 : 1 - day;
   const monday = new Date(base);
   monday.setDate(base.getDate() + mondayOffset);
@@ -36,214 +39,329 @@ function buildWeekTabs(): WeekDay[] {
   });
 }
 
-export function PlannerBoard({
-  tasks,
-  dailyPlans
-}: {
-  tasks: TaskDoc[];
-  dailyPlans: DailyPlanDoc[];
-}) {
+export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
   const { user } = useAuth();
   const weekTabs = useMemo(() => buildWeekTabs(), []);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  
+  // Persisted Session State
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [activeEndTime, setActiveEndTime] = useState<string | null>(null);
-  const [countdownLabel, setCountdownLabel] = useState("00:00:00");
-  const [generatingPlan, setGeneratingPlan] = useState(false);
+  
+  // Optimistic UI State
+  const [optimisticallyRemoved, setOptimisticallyRemoved] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
 
+  // Initial mount: Calculate today and hydrate localStorage
   useEffect(() => {
+    setMounted(true);
     const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
     setSelectedDay(weekTabs[todayIndex]?.iso ?? weekTabs[0]?.iso ?? null);
+
+    const savedSession = localStorage.getItem("planner_activeSessionId");
+    const savedEndTime = localStorage.getItem("planner_activeEndTime");
+    if (savedSession) setActiveSessionId(savedSession);
+    if (savedEndTime) setActiveEndTime(savedEndTime);
   }, [weekTabs]);
 
+  // Sync to localStorage
   useEffect(() => {
-    if (!activeEndTime) {
-      setCountdownLabel("00:00:00");
-      return;
+    if (mounted) {
+      if (activeSessionId) localStorage.setItem("planner_activeSessionId", activeSessionId);
+      else localStorage.removeItem("planner_activeSessionId");
+      
+      if (activeEndTime) localStorage.setItem("planner_activeEndTime", activeEndTime);
+      else localStorage.removeItem("planner_activeEndTime");
     }
+  }, [activeSessionId, activeEndTime, mounted]);
 
-    const interval = window.setInterval(() => {
-      const target = new Date(`${selectedDay}T${activeEndTime}`);
-      const diff = Math.max(target.getTime() - Date.now(), 0);
-      const totalSeconds = Math.floor(diff / 1000);
-      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-      const seconds = String(totalSeconds % 60).padStart(2, "0");
-      setCountdownLabel(`${hours}:${minutes}:${seconds}`);
-    }, 1000);
+  const isToday = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return selectedDay === today;
+  }, [selectedDay]);
 
-    return () => window.clearInterval(interval);
-  }, [activeEndTime, selectedDay]);
+  const isPast = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return selectedDay < today;
+  }, [selectedDay]);
 
-  const plan = dailyPlans.find((entry) => entry.id === selectedDay);
-  const blocks = plan?.timeBlocks ?? [];
+  const handleReschedule = async (taskId: string) => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      await rescheduleTask(taskId, today);
+      setOptimisticallyRemoved((prev) => [...prev, taskId]);
+      toast.success("Task moved to Today!");
+    } catch (error) {
+      toast.error("Failed to reschedule task.");
+    }
+  };
 
-  const handleStart = async (taskId: string, startTime: string, endTime: string) => {
+  // Derive execution blocks directly from User's manual tasks
+  const dailyTasks = tasks.filter(
+    (t) => t.suggestedDay === selectedDay && !t.completed && !optimisticallyRemoved.includes(t.id)
+  );
+
+  const handleStart = async (task: TaskDoc) => {
     if (!user) {
       toast.error("Sign in to start sessions and record your own progress.");
       return;
     }
 
-    await startSession({
-      taskId,
-      sessionId: `${selectedDay ?? ""}-${taskId}`,
-      plannedDate: selectedDay ?? "",
-      startTime,
-      endTime
-    });
-    setActiveSessionId(`${selectedDay ?? ""}-${taskId}`);
+    const sessionId = `${selectedDay ?? ""}-${task.id}`;
+    
+    // Dynamically generate timestamps based on the exact moment the user hits START
+    const now = new Date();
+    const end = new Date(now.getTime() + task.estimatedMinutes * 60000);
+    
+    const startTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+    
+    // Optimistic immediate update
+    setActiveSessionId(sessionId);
     setActiveEndTime(endTime);
-    toast.success("Session started. The clock is now against you.");
+    toast.success("Session started. Time to execute.");
+
+    try {
+      await startSession({
+        taskId: task.id,
+        sessionId,
+        plannedDate: selectedDay ?? "",
+        startTime,
+        endTime
+      });
+    } catch (err) {
+      toast.error("Failed to sync session start to server.");
+    }
   };
 
   const handleComplete = async (taskId: string) => {
-    if (!user || !activeSessionId) {
-      if (!user) {
-        toast.error("Sign in to complete sessions on your own profile.");
-      }
-      return;
-    }
+    if (!user || !activeSessionId) return;
 
-    await completeSession(activeSessionId, taskId);
+    // Optimistic removal
+    setOptimisticallyRemoved(prev => [...prev, taskId]);
+    const cachedSessionId = activeSessionId;
     setActiveSessionId(null);
     setActiveEndTime(null);
-    toast.success("🎉 Task completed! +25 coins earned. Keep this streak alive.");
+    toast.success("🎉 Task complete! Focus engine updated.");
+
+    try {
+      await completeSession(cachedSessionId, taskId);
+    } catch (err) {
+      toast.error("Sync failed. Refresh to ensure your data saved.");
+    }
   };
 
   const handleMiss = async (taskId: string) => {
-    if (!user || !activeSessionId) {
-      if (!user) {
-        toast.error("Sign in to log misses and keep your real plan updated.");
-      }
-      return;
-    }
+    if (!user || !activeSessionId) return;
 
-    await missSession(activeSessionId, taskId, "Session marked missed from planner");
+    // High-Stakes Abort: Remove task from today's timeline and apply penalty
+    setOptimisticallyRemoved(prev => [...prev, taskId]);
+    const cachedSessionId = activeSessionId;
     setActiveSessionId(null);
     setActiveEndTime(null);
-    toast.error("Miss recorded. Rescheduler triggered.");
-  };
-
-  const handleGeneratePlan = async () => {
-    if (!user) {
-      toast.error("Sign in to generate a daily plan from your own tasks.");
-      return;
-    }
+    toast.error("💀 Focus forfeited. -10 Coins deducted.");
 
     try {
-      setGeneratingPlan(true);
-      const result = await generateDailyPlan(selectedDay ?? undefined);
-      toast.success(
-        result.blockCount > 0
-          ? `Generated ${result.blockCount} study block${result.blockCount === 1 ? "" : "s"} for ${result.date}.`
-          : `No unfinished tasks were available for ${result.date}.`
-      );
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to generate a daily plan.");
-    } finally {
-      setGeneratingPlan(false);
+      await missSession(cachedSessionId, taskId, "Manual session aborted by user");
+    } catch (err) {
+      toast.error("Sync failed. Penalty might not have registered.");
     }
   };
 
+  if (!mounted) return null;
+
   return (
-    <div className="space-y-6">
-      <Card className="space-y-4">
-        <SectionHeading
-          eyebrow="Seven-day planner"
-          title="Your AI blocks, one day at a time"
-          description="Start, complete, or miss each block directly from the planner. Every action feeds the rescheduler."
-        />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-          {weekTabs.map((day) => (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <CreateTaskDialog 
+        isOpen={isTaskDialogOpen} 
+        onClose={() => setIsTaskDialogOpen(false)} 
+        onSuccess={() => window.location.reload()} 
+        defaultDate={selectedDay || undefined}
+      />
+
+      <SectionHeading
+        eyebrow="Seven-day horizon"
+        title="Your execution timeline"
+        description="Select a day, manually assign your targets, and start the timer. The system will handle the streaks and coins."
+      />
+
+      {/* Sleek Week Tabs */}
+      <div className="grid grid-cols-7 gap-2">
+        {weekTabs.map((day) => {
+          const isSelected = selectedDay === day.iso;
+          return (
             <button
               key={day.iso}
-              className={`rounded-xl px-3 py-4 text-left text-sm font-medium transition-all duration-200 ${
-                selectedDay === day.iso
-                  ? "bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-[#050505]"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 dark:bg-slate-900/50 dark:border-white/5 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              }`}
               onClick={() => setSelectedDay(day.iso)}
+              className={cn(
+                "flex flex-col items-center justify-center rounded-2xl py-3 transition-all duration-300 relative overflow-hidden",
+                isSelected 
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 scale-105" 
+                  : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-white"
+              )}
             >
-              <p>{day.weekday}</p>
-              <p className="mt-1 text-xs opacity-80">{day.dayNum}</p>
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">{day.weekday}</span>
+              <span className={cn("text-lg font-black mt-1", isSelected ? "text-white" : "")}>{day.dayNum}</span>
+              {isSelected && <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20" />}
             </button>
-          ))}
-        </div>
-      </Card>
+          );
+        })}
+      </div>
 
-      <Card className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="rounded-[32px] border border-white/5 bg-[#050505]/50 backdrop-blur-xl p-8 shadow-2xl">
+        <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-white/5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Today&apos;s time blocks</p>
-            <h3 className="mt-2 font-display text-2xl font-bold text-slate-900 dark:text-white" suppressHydrationWarning>{selectedDay}</h3>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/5 text-slate-400">
+                {isPast ? <History className="h-5 w-5" /> : <CalendarDays className="h-5 w-5" />}
+              </div>
+              <h3 className="font-display text-3xl font-black text-white capitalize">
+                {isToday ? "Today's Agenda" : isPast ? "Historical Record" : "Future Strategy"}
+              </h3>
+              {activeSessionId && <ActiveSessionTimer selectedDay={selectedDay || ""} activeEndTime={activeEndTime} />}
+            </div>
+            <p className="mt-2 text-indigo-400 font-medium text-sm flex items-center gap-2">
+              {dailyTasks.length === 0 ? "No tasks targeted." : `${dailyTasks.length} active target${dailyTasks.length === 1 ? "" : "s"} locked in.`}
+              {isPast && dailyTasks.length > 0 && <span className="text-rose-400 opacity-60">• Contains Overdue items</span>}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button disabled={generatingPlan} onClick={() => void handleGeneratePlan()} variant="ghost">
-              {generatingPlan ? "Generating..." : "Generate day's plan"}
-            </Button>
-            <Badge>{activeSessionId ? `Countdown ${countdownLabel}` : `${blocks.length} blocks`}</Badge>
-          </div>
+          {!isPast && (
+            <div className="flex items-center">
+               <Button 
+                onClick={() => setIsTaskDialogOpen(true)} 
+                className="rounded-full bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)] sm:px-5"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Task</span>
+              </Button>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-4">
-          {blocks.length === 0 ? (
-            <EmptyState
-              title={`No plan for ${selectedDay}`}
-              description="No AI plan exists for this day yet. Generate one manually from your current unfinished tasks."
-              ctaLabel={generatingPlan ? "Generating..." : "Generate day's plan"}
-              ctaAction={() => void handleGeneratePlan()}
-            />
-          ) : (
-            blocks.map((block) => {
-              const task = tasks.find((entry) => entry.id === block.taskId);
-              const active = activeSessionId === `${selectedDay}-${block.taskId}`;
+        {/* Vertical Execution Board */}
+        {dailyTasks.length === 0 ? (
+          <EmptyState
+            title={isToday ? "Nothing planned for today" : isPast ? "No historical records" : "Planning ahead?"}
+            description={isPast ? "Your execution history for this day is empty." : "Manually add targets to build your focus schedule."}
+            ctaLabel={!isPast ? "Add Target" : undefined}
+            ctaAction={!isPast ? (() => setIsTaskDialogOpen(true)) : undefined}
+          />
+        ) : (
+          <div className="relative pl-8 before:absolute before:inset-y-0 before:left-[15px] before:w-[2px] before:bg-gradient-to-b before:from-indigo-500/50 before:via-white/5 before:to-transparent space-y-8">
+            {dailyTasks.map((task) => {
+              const isThisBlockActive = activeSessionId === `${selectedDay}-${task.id}`;
+              const isAnyBlockActive = activeSessionId !== null;
 
               return (
-                <div
-                  key={`${selectedDay}-${block.taskId}`}
-                  className={`rounded-2xl border bg-white p-5 transition-all duration-200 dark:bg-slate-900 ${
-                    active 
-                      ? "border-indigo-500 ring-1 ring-indigo-500 shadow-md" 
-                      : "border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 hover:shadow-sm"
-                  }`}
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-2">
-                      <Badge>{task?.subject ?? "Unassigned"}</Badge>
-                      <h4 className="font-display text-xl font-bold">{task?.taskName ?? "Missing task reference"}</h4>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-                        <span className="inline-flex items-center gap-2">
-                          <Clock3 className="h-4 w-4" />
-                          {block.startTime} - {block.endTime}
-                        </span>
-                        <span>{formatMinutes(task?.estimatedMinutes ?? 0)}</span>
+                <div key={task.id} className="relative group animate-in slide-in-from-left-4 duration-300">
+                  {/* Timeline Node */}
+                  <div className={cn(
+                    "absolute -left-[35px] top-6 h-3 w-3 rounded-full border-2 transition-all duration-300",
+                    isThisBlockActive 
+                      ? "bg-indigo-500 border-indigo-200 ring-4 ring-indigo-500/30 scale-125" 
+                      : "bg-[#050505] border-white/20 group-hover:border-indigo-400 group-hover:bg-indigo-400/20"
+                  )} />
+                  
+                  {/* Task Card */}
+                  <div className={cn(
+                    "rounded-[24px] border p-6 transition-all duration-300",
+                    isThisBlockActive
+                      ? "bg-indigo-950/20 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.1)] translate-x-1"
+                      : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                  )}>
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                      
+                      {/* Left: Info */}
+                      <div className="space-y-3 flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex items-center rounded-full bg-white/5 px-2.5 py-1 text-xs font-semibold text-white/70">
+                            {task.subject}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full ring-1 ring-amber-400/20">
+                            <Coins className="h-3 w-3" />
+                            20 Coins
+                          </span>
+                           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                            <Clock3 className="h-3 w-3" />
+                            {formatMinutes(task.estimatedMinutes)} Target
+                          </span>
+                          {isPast && !task.completed && (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                              <AlertCircle className="h-3 w-3" />
+                              Overdue
+                            </span>
+                          )}
+                        </div>
+                        <h4 className={cn(
+                          "font-display text-2xl font-bold leading-tight",
+                          isToday ? "text-white" : isPast ? "text-white/20" : "text-white/40"
+                        )}>
+                          {task.taskName}
+                        </h4>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {!active ? (
-                        <Button onClick={() => void handleStart(block.taskId, block.startTime, block.endTime)}>
-                          Start session
-                        </Button>
-                      ) : (
-                        <>
-                          <Button variant="secondary" onClick={() => void handleComplete(block.taskId)}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Complete
+
+                      {/* Right: Actions */}
+                      <div className="flex items-center gap-3 mt-2 lg:mt-0">
+                        {isPast ? (
+                          !task.completed ? (
+                            <Button 
+                              onClick={() => void handleReschedule(task.id)}
+                              className="rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all group"
+                            >
+                              <ArrowRight className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                              Move to Today
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                              Archive Complete
+                            </div>
+                          )
+                        ) : !isToday ? (
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                            Planned for {selectedDay}
+                          </div>
+                        ) : !isThisBlockActive ? (
+                          <Button 
+                            disabled={isAnyBlockActive} 
+                            onClick={() => void handleStart(task)}
+                            className={cn(
+                              "rounded-full transition-all",
+                              isAnyBlockActive ? "opacity-50" : "hover:scale-105"
+                            )}
+                          >
+                            <Play className="mr-2 h-4 w-4" />
+                            Start Focus
                           </Button>
-                          <Button variant="danger" onClick={() => void handleMiss(block.taskId)}>
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Miss
-                          </Button>
-                        </>
-                      )}
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              onClick={() => void handleMiss(task.id)}
+                              className="rounded-full text-rose-400 hover:text-rose-300 hover:bg-rose-400/10"
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Abort Focus
+                            </Button>
+                            <Button 
+                              onClick={() => void handleComplete(task.id)}
+                              className="rounded-full bg-emerald-500 text-black hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-105 transition-all"
+                            >
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Complete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
-      </Card>
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { Coins, Flame, Target, TrendingUp } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
+import { useState } from "react";
+import { Coins, Flame, Target, TrendingUp, Plus } from "lucide-react";
 import { CoachChat } from "@/components/coach-chat";
 import { EmptyState } from "@/components/empty-state";
 import { ProgressRing } from "@/components/progress-ring";
@@ -17,10 +17,11 @@ const PlanRealityWidget = dynamic(
 );
 import { StudentProfileCard } from "@/components/student-profile-card";
 import { WalletCard } from "@/components/wallet-card";
-import { Card, SectionHeading } from "@/components/ui";
+import { Card, SectionHeading, Button } from "@/components/ui";
+import { CreateTaskDialog } from "@/components/create-task-dialog";
 import { useStudyData } from "@/hooks/use-study-data";
 import { useAuth } from "@/hooks/use-auth";
-import { getExploreDailyPlans, getExploreProfile, getExploreSessions, getExploreTasks } from "@/lib/explore-data";
+import { getExploreProfile, getExploreSessions, getExploreTasks } from "@/lib/explore-data";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -40,11 +41,10 @@ function getMotivation(focusScore: number, missedCount: number): string {
 
 export default function DashboardPage() {
   const { profile, user } = useAuth();
-  const { tasks, sessions, dailyPlans } = useStudyData();
+  const { tasks, sessions } = useStudyData();
   const visibleProfile = user ? profile : getExploreProfile();
-  const visibleTasks = user ? tasks : getExploreTasks();
   const visibleSessions = user ? sessions : getExploreSessions();
-  const visibleDailyPlans = user ? dailyPlans : getExploreDailyPlans();
+  const visibleTasks = user ? tasks : getExploreTasks();
 
   const activeTasks = visibleTasks.filter((task) => !task.completed).length;
   const completedSessions = visibleSessions.filter((session) => session.completed).length;
@@ -56,13 +56,29 @@ export default function DashboardPage() {
 
   const displayName = visibleProfile?.displayName ?? "Student";
   const firstName = displayName.split(" ")[0];
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
 
   return (
     <div className="mx-auto max-w-5xl">
-      <header className="mb-8 max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Command Center</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your daily command center — one glance, one action, full momentum.</p>
+      <CreateTaskDialog 
+        isOpen={isTaskDialogOpen} 
+        onClose={() => setIsTaskDialogOpen(false)} 
+        onSuccess={() => window.location.reload()} 
+      />
+
+      <header className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Command Center</p>
+          <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your daily command center — one glance, one action, full momentum.</p>
+        </div>
+        <Button 
+          onClick={() => setIsTaskDialogOpen(true)}
+          className="shrink-0 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Quick Task
+        </Button>
       </header>
 
       <div className="grid gap-6">
@@ -139,7 +155,7 @@ export default function DashboardPage() {
             ctaHref="/onboarding"
           />
         ) : (
-          <PlanRealityWidget tasks={visibleTasks} sessions={visibleSessions} dailyPlans={visibleDailyPlans} />
+          <PlanRealityWidget tasks={visibleTasks} sessions={visibleSessions} />
         )}
 
         {/* ── Coach + Insights ── */}

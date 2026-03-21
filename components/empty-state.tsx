@@ -11,7 +11,7 @@ export function EmptyState({
 }: {
   title: string;
   description: string;
-  ctaLabel: string;
+  ctaLabel?: string;
   ctaHref?: string;
   ctaAction?: () => void;
 }) {
@@ -22,7 +22,7 @@ export function EmptyState({
         <h3 className="font-display text-2xl font-bold">{title}</h3>
         <p className="max-w-lg text-sm text-slate-600 dark:text-slate-300">{description}</p>
       </div>
-      {ctaHref ? (
+      {ctaHref && ctaLabel ? (
         <Link href={ctaHref}>
           <Button className="mt-5">
             {ctaLabel}
@@ -30,10 +30,12 @@ export function EmptyState({
           </Button>
         </Link>
       ) : (
-        <Button className="mt-5" onClick={ctaAction}>
-          {ctaLabel}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+        ctaLabel && (
+          <Button className="mt-5" onClick={ctaAction}>
+            {ctaLabel}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        )
       )}
     </Card>
   );

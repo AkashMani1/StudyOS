@@ -53,17 +53,9 @@ service cloud.firestore {
     match /users/{uid}/tasks/{taskId} {
       allow read: if isOwner(uid) || isAdmin();
 
-      allow create, delete: if isAdmin();
+      allow create, delete: if isOwner(uid) || isAdmin();
 
-      allow update: if isAdmin() || (
-        isOwner(uid) &&
-        request.resource.data.subject == resource.data.subject &&
-        request.resource.data.taskName == resource.data.taskName &&
-        request.resource.data.estimatedMinutes == resource.data.estimatedMinutes &&
-        request.resource.data.priority == resource.data.priority &&
-        request.resource.data.suggestedDay == resource.data.suggestedDay &&
-        request.resource.data.splitFromTaskId == resource.data.splitFromTaskId
-      );
+      allow update: if isOwner(uid) || isAdmin();
     }
 
     match /users/{uid}/dailyPlans/{planId} {
@@ -73,7 +65,7 @@ service cloud.firestore {
 
     match /users/{uid}/sessions/{sessionId} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
     }
 
     match /users/{uid}/focusSessions/{dateId}/{document=**} {

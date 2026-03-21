@@ -1,6 +1,6 @@
 "use client";
 
-import { postJson } from "@/api/client";
+import { postJson, patchJson } from "@/api/client";
 import { trackEvent } from "@/lib/analytics";
 import type {
   DailyPlanResponse,
@@ -75,8 +75,8 @@ export async function savePreferences(preferences: StudyPreferences): Promise<vo
   await postJson<StudyPreferences, { ok: true }>("/api/preferences", preferences);
 }
 
-export async function generateDailyPlan(date?: string): Promise<DailyPlanResponse> {
-  return postJson<{ date?: string }, DailyPlanResponse>("/api/daily-plan", { date });
+export async function generateDailyPlan(date?: string, useAi: boolean = true): Promise<DailyPlanResponse> {
+  return postJson<{ date?: string, useAi?: boolean }, DailyPlanResponse>("/api/daily-plan", { date, useAi });
 }
 
 export async function generateWeeklyInsight(): Promise<WeeklyInsightResponse> {
@@ -85,4 +85,26 @@ export async function generateWeeklyInsight(): Promise<WeeklyInsightResponse> {
 
 export async function refreshLeaderboard(): Promise<LeaderboardScore[]> {
   return postJson<Record<string, never>, LeaderboardScore[]>("/api/leaderboard", {});
+}
+
+export async function createManualTask(input: {
+  taskName: string;
+  subject: string;
+  estimatedMinutes: number;
+  suggestedDay: string;
+}): Promise<{ id: string }> {
+  await trackEvent("manual_task_created", { subject: input.subject });
+  return postJson<{
+    taskName: string;
+    subject: string;
+    estimatedMinutes: number;
+    suggestedDay: string;
+  }, { id: string }>("/api/tasks", input);
+}
+
+export async function rescheduleTask(taskId: string, newDate: string): Promise<void> {
+  await patchJson<{ id: string; suggestedDay: string }, { ok: true }>("/api/tasks", {
+    id: taskId,
+    suggestedDay: newDate
+  });
 }

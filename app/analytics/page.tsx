@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/app-shell";
@@ -157,22 +157,76 @@ export default function AnalyticsPage() {
               </div>
             </Card>
             <Card className="space-y-4">
-              <SectionHeading
-                eyebrow="Weekly AI report"
-                title="Report card"
-                description="Generate your latest review on demand and read it here."
-              />
-              <div className="flex justify-end">
-                <Button disabled={generatingInsight} onClick={() => void handleGenerateInsight()} variant="ghost">
-                  {generatingInsight ? "Generating..." : "Generate weekly insight"}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <SectionHeading
+                  eyebrow="Deep Insight"
+                  title="AI Report Card"
+                  description="A brutal, contextual analysis of your study timeline."
+                />
+                <Button disabled={generatingInsight} onClick={() => void handleGenerateInsight()} variant="secondary" className="text-indigo-600 dark:text-indigo-400 border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 whitespace-nowrap">
+                  {generatingInsight ? "Analyzing Log..." : "Run Analysis"}
                 </Button>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-800 dark:border-white/5 dark:bg-slate-800/50 dark:text-slate-200">
-                <p className="whitespace-pre-wrap">
-                  {latestInsight?.report ??
-                    "No weekly insight generated yet. Use the button above to create one from your recent sessions."}
-                </p>
-              </div>
+              
+              {latestInsight?.reportCard ? (
+                <div className="space-y-6 animate-in slide-in-from-bottom-2 fade-in duration-500">
+                  {/* Grade Header */}
+                  <div className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full" />
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-3xl font-black text-white shadow-xl ring-1 ring-white/20">
+                      {latestInsight.reportCard.grade}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg lg:text-xl">Execution Grade</h4>
+                      <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 leading-relaxed">{latestInsight.reportCard.summary}</p>
+                    </div>
+                  </div>
+
+                  {/* Specific Feedback */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/5">
+                      <p className="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-2 tracking-wider">Focus Execution</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{latestInsight.focusScoreFeedback}</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/5">
+                      <p className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400 mb-2 tracking-wider">Time Patterns</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{latestInsight.bestStudyTimeFeedback}</p>
+                    </div>
+                  </div>
+
+                  {/* Deep Insights */}
+                  {latestInsight.deepInsights?.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Synthesized Insights</p>
+                      {latestInsight.deepInsights.map((insight, i) => (
+                        <div key={i} className="flex gap-3 text-sm text-slate-600 dark:text-slate-300">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">•</span>
+                          <span className="leading-relaxed">{insight}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Action Items */}
+                  {latestInsight.actionItems?.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Actionable Next Steps</p>
+                      {latestInsight.actionItems.map((item, i) => (
+                        <div key={i} className="flex gap-3 text-sm text-slate-600 dark:text-slate-300">
+                          <div className="mt-1 h-4 w-4 shrink-0 rounded-sm border border-indigo-600/30 dark:border-indigo-400/50 bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <span className="leading-relaxed">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0A0A0A] p-8 text-center">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">No report card generated yet. Run the analysis engine to grade your week.</p>
+                </div>
+              )}
             </Card>
           </section>
         </div>

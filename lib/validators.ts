@@ -81,5 +81,6 @@ export const rescheduleSchema = z.object({
 });
 
 export const dailyPlanSchema = z.object({
-  date: z.string().date().optional()
+  date: z.string().date().optional(),
+  useAi: z.boolean().optional()
 });

@@ -23,34 +23,62 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   if (isMarketing) return <>{children}</>;
 
   const allNavItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/planner", label: "Planner", icon: ListTodo },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/rooms", label: "Rooms", icon: Users },
-    { href: "/leaderboard", label: "Leaderboard", icon: Medal },
-    { href: "/settings", label: "Settings", icon: Settings },
-    ...(user && profile?.role === "admin" ? [{ href: "/admin", label: "Admin", icon: Shield }] : [])
+    { 
+      href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, 
+      active: "bg-emerald-100/50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-emerald-200/50 dark:border-emerald-500/20",
+      hover: "hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/5 dark:hover:text-emerald-300"
+    },
+    { 
+      href: "/planner", label: "Planner", icon: ListTodo, 
+      active: "bg-indigo-100/50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-indigo-200/50 dark:border-indigo-500/20",
+      hover: "hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/5 dark:hover:text-indigo-300"
+    },
+    { 
+      href: "/analytics", label: "Analytics", icon: BarChart3, 
+      active: "bg-amber-100/50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-amber-200/50 dark:border-amber-500/20",
+      hover: "hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/5 dark:hover:text-amber-300"
+    },
+    { 
+      href: "/rooms", label: "Rooms", icon: Users, 
+      active: "bg-rose-100/50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-rose-200/50 dark:border-rose-500/20",
+      hover: "hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/5 dark:hover:text-rose-300"
+    },
+    { 
+      href: "/leaderboard", label: "Leaderboard", icon: Medal, 
+      active: "bg-cyan-100/50 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-cyan-200/50 dark:border-cyan-500/20",
+      hover: "hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-500/5 dark:hover:text-cyan-300"
+    },
+    { 
+      href: "/settings", label: "Settings", icon: Settings, 
+      active: "bg-slate-200/80 text-slate-900 dark:bg-white/10 dark:text-white font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-slate-300/50 dark:border-white/10",
+      hover: "hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-white"
+    },
+    ...(user && profile?.role === "admin" ? [{ 
+      href: "/admin", label: "Admin", icon: Shield, 
+      active: "bg-red-100/50 text-red-700 dark:bg-red-500/15 dark:text-red-400 font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border border-red-200/50 dark:border-red-500/20",
+      hover: "hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/5 dark:hover:text-red-300"
+    }] : [])
   ];
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <div className="flex flex-col gap-2 p-3">
       {allNavItems.map((item) => {
         const Icon = item.icon;
-        const active = pathname.startsWith(item.href);
+        const isActive = pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onClick}
             className={cn(
-              "flex items-center gap-4 rounded-xl px-3 py-3 transition-colors",
-              active 
-                ? "bg-indigo-50 dark:bg-indigo-500/10 border-l-4 border-indigo-600 text-indigo-700 dark:text-indigo-400 font-semibold" 
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l-4 border-transparent dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
+              "flex items-center gap-4 rounded-xl px-3 py-3 transition-all duration-300 group/nav",
+              isActive 
+                ? item.active
+                : cn("text-slate-500 border border-transparent dark:text-slate-400", item.hover)
             )}
           >
             <Icon className="h-5 w-5 shrink-0" />
-            <span className="whitespace-nowrap opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 font-medium">
+            <span className="whitespace-nowrap opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 font-medium tracking-tight">
               {item.label}
             </span>
           </Link>

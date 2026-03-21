@@ -235,7 +235,7 @@ async function redistributeOverdueTasks(uid: string): Promise<string[]> {
   return gemini.data.map((item) => item.taskId);
 }
 
-export async function generateDailyPlanForUser(uid: string, dateInput?: string): Promise<DailyPlanResponse> {
+export async function generateDailyPlanForUser(uid: string, dateInput?: string, useAi: boolean = true): Promise<DailyPlanResponse> {
   const targetDate = dateInput && /^\d{4}-\d{2}-\d{2}$/.test(dateInput) ? dateInput : todayIsoDate();
   const [profileSnapshot, tasksSnapshot] = await Promise.all([
     adminDb.collection("users").doc(uid).get(),
@@ -275,6 +275,22 @@ export async function generateDailyPlanForUser(uid: string, dateInput?: string):
     taskEntries.map((task) => ({ id: task.id, estimatedMinutes: task.estimatedMinutes })),
     profile?.preferences.preferredStartHour ?? 6
   );
+  if (!useAi) {
+    await adminDb.collection("users").doc(uid).collection("dailyPlans").doc(targetDate).set(
+      {
+        timeBlocks: fallback,
+        generatedAt: FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    return {
+      date: targetDate,
+      blockCount: fallback.length,
+      usedFallback: true
+    };
+  }
+
   const gemini = await generateGeminiJson<Array<{ taskId: string; startTime: string; endTime: string }>>({
     prompt: [
       "Build today's study plan from these tasks.",
@@ -526,7 +542,8 @@ export async function completePlannerSession(uid: string, sessionId: string, tas
     throw new Error("Session or task not found.");
   }
 
-  await sessionRef.set(
+  const batch = adminDb.batch();
+  batch.set(sessionRef,
     {
       actualEnd: FieldValue.serverTimestamp(),
       completed: true,
@@ -534,7 +551,7 @@ export async function completePlannerSession(uid: string, sessionId: string, tas
     },
     { merge: true }
   );
-  await taskRef.set(
+  batch.set(taskRef,
     {
       completed: true,
       completedAt: FieldValue.serverTimestamp(),
@@ -542,6 +559,19 @@ export async function completePlannerSession(uid: string, sessionId: string, tas
     },
     { merge: true }
   );
+  
+  // Award 20 Coins using dot-notation for nested field safety
+  batch.update(adminDb.collection("users").doc(uid), {
+    "wallet.coins": FieldValue.increment(20),
+    "wallet.transactions": FieldValue.arrayUnion({
+      type: "credit",
+      amount: 20,
+      reason: "Manual Focus Complete",
+      timestamp: new Date(), // FieldValue.serverTimestamp() not allowed in arrayUnion
+    })
+  });
+
+  await batch.commit();
 }
 
 export async function rescheduleTaskForUser(uid: string, taskId: string): Promise<string[]> {
@@ -662,7 +692,8 @@ export async function missPlannerSession(input: {
     throw new Error("Session or task not found.");
   }
 
-  await sessionRef.set(
+  const batch = adminDb.batch();
+  batch.set(sessionRef,
     {
       actualEnd: FieldValue.serverTimestamp(),
       completed: false,
@@ -671,7 +702,7 @@ export async function missPlannerSession(input: {
     },
     { merge: true }
   );
-  await taskRef.set(
+  batch.set(taskRef,
     {
       missedCount: FieldValue.increment(1),
       updatedAt: FieldValue.serverTimestamp()
@@ -679,7 +710,20 @@ export async function missPlannerSession(input: {
     { merge: true }
   );
 
-  return rescheduleTaskForUser(input.uid, input.taskId);
+  // Penalize 10 Coins
+  batch.update(adminDb.collection("users").doc(input.uid), {
+    "wallet.coins": FieldValue.increment(-10),
+    "wallet.transactions": FieldValue.arrayUnion({
+      type: "debit",
+      amount: 10,
+      reason: "Focus Session Forfeited",
+      timestamp: new Date(), 
+    })
+  });
+
+  await batch.commit();
+
+  return [input.taskId];
 }
 
 export async function createSessionPayload(idToken: string): Promise<SessionPayload> {

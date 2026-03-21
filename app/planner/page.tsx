@@ -1,48 +1,51 @@
 "use client";
 
 import { Card, Skeleton } from "@/components/ui";
-import { EmptyState } from "@/components/empty-state";
 import { PlannerBoard } from "@/components/planner-board";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudyData } from "@/hooks/use-study-data";
-import { getExploreDailyPlans, getExploreTasks } from "@/lib/explore-data";
+import { getExploreTasks } from "@/lib/explore-data";
 
 export default function PlannerPage() {
   const { user } = useAuth();
-  const { goals, tasks, dailyPlans, loading } = useStudyData();
+  const { tasks, loading } = useStudyData();
   const visibleTasks = user ? tasks : getExploreTasks();
-  const visibleDailyPlans = user ? dailyPlans : getExploreDailyPlans();
 
   return (
     <div className="mx-auto max-w-5xl">
       <header className="mb-8 max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Study plan</p>
         <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Planner</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your AI-generated blocks for today and the next week. Start sessions here, then close the loop with completion or misses.</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your manual task execution board. Add tasks, lock in, and trigger the accountability engine.</p>
       </header>
       
       {user && loading ? (
-        <Card className="space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </Card>
-      ) : user && goals.length > 0 && visibleTasks.length === 0 ? (
-        <EmptyState
-          title="Your plan is still syncing"
-          description="Your goal was saved, but the generated tasks have not finished loading into the planner yet. Give it a moment and refresh once."
-          ctaLabel="Refresh planner"
-          ctaHref="/planner"
-        />
-      ) : visibleTasks.length === 0 ? (
-        <EmptyState
-          title="No plan exists yet"
-          description="Set your goal and subject hours first. The auto-split engine needs something real to work from."
-          ctaLabel="Go to onboarding"
-          ctaHref="/onboarding"
-        />
+        <div className="space-y-8 animate-in mt-10">
+          <Skeleton className="h-8 w-64 mb-4" />
+          
+          {/* Week Tabs Skeleton */}
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl bg-white/5" />
+            ))}
+          </div>
+
+          {/* Timeline Board Skeleton */}
+          <div className="rounded-[32px] border border-white/5 bg-[#050505]/50 p-8 space-y-8">
+            <div className="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
+              <Skeleton className="h-8 w-40 bg-white/10" />
+              <Skeleton className="h-10 w-32 rounded-full bg-white/10" />
+            </div>
+            
+            <div className="space-y-4">
+              <Skeleton className="h-24 w-full rounded-[24px] bg-white/[0.02]" />
+              <Skeleton className="h-24 w-full rounded-[24px] bg-white/[0.02]" />
+              <Skeleton className="h-24 w-full rounded-[24px] bg-white/[0.02]" />
+            </div>
+          </div>
+        </div>
       ) : (
-        <PlannerBoard tasks={visibleTasks} dailyPlans={visibleDailyPlans} />
+        <PlannerBoard tasks={visibleTasks} />
       )}
     </div>
   );

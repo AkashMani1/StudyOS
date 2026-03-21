@@ -6,17 +6,10 @@ import { Card, SectionHeading } from "@/components/ui";
 import { formatMinutes } from "@/lib/utils";
 import type { DailyPlanDoc, SessionDoc, SubjectCompletionDatum, TaskDoc } from "@/types/domain";
 
-function computePlannedMinutes(day: string, plans: DailyPlanDoc[], tasks: TaskDoc[]): number {
-  const plan = plans.find((entry) => entry.id === day);
-
-  if (!plan) {
-    return 0;
-  }
-
-  return plan.timeBlocks.reduce((sum, block) => {
-    const task = tasks.find((item) => item.id === block.taskId);
-    return sum + (task?.estimatedMinutes ?? 0);
-  }, 0);
+function computePlannedMinutes(day: string, tasks: TaskDoc[]): number {
+  return tasks
+    .filter((task) => task.suggestedDay === day)
+    .reduce((sum, task) => sum + (task.estimatedMinutes ?? 0), 0);
 }
 
 function computeActualMinutes(day: string, sessions: SessionDoc[]): number {
@@ -34,12 +27,10 @@ function computeActualMinutes(day: string, sessions: SessionDoc[]): number {
 
 export function PlanRealityWidget({
   tasks,
-  sessions,
-  dailyPlans
+  sessions
 }: {
   tasks: TaskDoc[];
   sessions: SessionDoc[];
-  dailyPlans: DailyPlanDoc[];
 }) {
   const chartData = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
@@ -50,10 +41,10 @@ export function PlanRealityWidget({
 
     return days.map((day) => ({
       day: day.slice(5),
-      plannedHours: Number((computePlannedMinutes(day, dailyPlans, tasks) / 60).toFixed(1)),
+      plannedHours: Number((computePlannedMinutes(day, tasks) / 60).toFixed(1)),
       actualHours: Number((computeActualMinutes(day, sessions) / 60).toFixed(1))
     }));
-  }, [dailyPlans, sessions, tasks]);
+  }, [sessions, tasks]);
 
   const subjectData = useMemo<SubjectCompletionDatum[]>(
     () =>

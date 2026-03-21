@@ -13,14 +13,17 @@ export async function POST(request: Request) {
   }
 
   try {
+    const body = await parseRequestBody(request, dailyPlanSchema);
+    const useAi = body.useAi ?? true;
+
     await enforceApiRateLimit(request, {
-      scope: "daily-plan",
-      limit: 6,
+      scope: useAi ? "daily-plan" : "daily-plan-fallback",
+      limit: useAi ? 6 : 100, // 0-credit manual fills have generous limits
       windowSeconds: 3600,
       session
     });
-    const body = await parseRequestBody(request, dailyPlanSchema);
-    const result = await generateDailyPlanForUser(session.uid, body.date);
+    
+    const result = await generateDailyPlanForUser(session.uid, body.date, useAi);
 
     return NextResponse.json(result);
   } catch (error) {

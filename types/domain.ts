@@ -69,7 +69,13 @@ export interface FocusUsageEntry {
 
 export interface WeeklyInsightDoc {
   id: string;
-  report: string;
+  reportCard: {
+    grade: string;
+    summary: string;
+  };
+  focusScoreFeedback: string;
+  bestStudyTimeFeedback: string;
+  deepInsights: string[];
   actionItems: string[];
   generatedAt: TimestampValue | null;
 }
@@ -220,7 +226,13 @@ export interface RescheduleResponse {
 }
 
 export interface WeeklyInsightResponse {
-  report: string;
+  reportCard: {
+    grade: string;
+    summary: string;
+  };
+  focusScoreFeedback: string;
+  bestStudyTimeFeedback: string;
+  deepInsights: string[];
   actionItems: string[];
 }
 

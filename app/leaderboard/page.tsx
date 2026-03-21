@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { motion } from "framer-motion";
-import { RefreshCw, Trophy, Medal, Zap, TrendingUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCw, Trophy, Medal, Zap, TrendingUp, Crown, Star } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { ProGate } from "@/components/pro-gate";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 import { getExploreLeaderboard } from "@/lib/explore-data";
 import { db } from "@/lib/firebase";
 import { refreshLeaderboard } from "@/services/study-service";
@@ -126,114 +127,169 @@ export default function LeaderboardPage() {
   const meIndex = sorted.findIndex((r) => r.uid === user?.uid);
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 max-w-3xl">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Weekly Rankings</p>
-          <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Leaderboard</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : "Reads from Firebase instantly."}
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-400 ring-1 ring-indigo-500/20">
+            <Star className="h-3 w-3 fill-indigo-400" />
+            Global Rankings
+          </div>
+          <h1 className="font-display text-5xl font-black text-white tracking-tight">
+            Hall of <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400">Scholars</span>
+          </h1>
+          <p className="max-w-md text-sm font-medium text-slate-400 leading-relaxed">
+            {lastUpdated ? `Syncing with global wallet: ${lastUpdated.toLocaleTimeString()}` : "Real-time verification of study stakes and achievements."}
           </p>
         </div>
         <button
           onClick={() => void load(true)}
           disabled={loading}
-          className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-60"
+          className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 text-indigo-600 dark:text-indigo-400 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Loading..." : "Refresh"}
+          <RefreshCw className={`h-4 w-4 text-indigo-400 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
+          {loading ? "Syncing..." : "Sync Wallet"}
+          <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
         </button>
       </header>
-      <ProGate>
-        <div className="max-w-3xl space-y-8">
 
-          {/* User is outside top 10 */}
-          {meIndex >= 10 && user && (
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 dark:border-indigo-500/30 dark:bg-indigo-500/10 px-5 py-4 flex items-center justify-between shadow-sm">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-0.5">Your Position</p>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{sorted[meIndex]?.displayName}</p>
-              </div>
-              <p className="font-display font-bold text-3xl text-indigo-600 dark:text-indigo-400">#{meIndex + 1}</p>
+      <ProGate>
+        <div className="space-y-16">
+          {/* Top 3 Podium */}
+          {sorted.length >= 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end max-w-4xl mx-auto">
+              {/* Rank 2 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="order-2 md:order-1 flex flex-col items-center group"
+              >
+                <div className="relative mb-4">
+                  <div className={`h-24 w-24 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[1].uid)} p-1 shadow-[0_0_30px_rgba(148,163,184,0.2)]`}>
+                    <div className="h-full w-full rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center text-3xl font-black text-white overflow-hidden uppercase">
+                      {sorted[1].displayName.charAt(0)}
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-slate-400 text-white rounded-full p-2 border-4 border-slate-900 shadow-xl">
+                    <Medal className="h-5 w-5" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">{sorted[1].displayName}</h3>
+                <div className="text-indigo-400 font-black text-2xl">{sorted[1].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
+              </motion.div>
+
+              {/* Rank 1 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="order-1 md:order-2 flex flex-col items-center mb-8 md:mb-12 relative"
+              >
+                <div className="absolute -top-16 animate-bounce">
+                  <Crown className="h-12 w-12 text-amber-400 fill-amber-400" />
+                </div>
+                <div className="relative mb-6">
+                  <div className={`h-32 w-32 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[0].uid)} p-[6px] shadow-[0_0_50px_rgba(245,158,11,0.3)] ring-4 ring-amber-500/20`}>
+                    <div className="h-full w-full rounded-full border-4 border-slate-950 bg-slate-900 flex items-center justify-center text-4xl font-black text-white overflow-hidden uppercase">
+                      {sorted[0].displayName.charAt(0)}
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-3 -right-3 bg-amber-500 text-white rounded-full p-3 border-4 border-slate-900 shadow-2xl scale-125">
+                    <Trophy className="h-6 w-6" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-2">{sorted[0].displayName}</h3>
+                <div className="text-amber-500 font-extrabold text-4xl tabular-nums drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  {sorted[0].coins.toLocaleString()}
+                  <span className="text-sm uppercase ml-1 opacity-60">Coins</span>
+                </div>
+              </motion.div>
+
+              {/* Rank 3 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="order-3 flex flex-col items-center group"
+              >
+                <div className="relative mb-4">
+                  <div className={`h-24 w-24 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[2].uid)} p-1 shadow-[0_0_30px_rgba(180,83,9,0.2)]`}>
+                    <div className="h-full w-full rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center text-3xl font-black text-white overflow-hidden uppercase">
+                      {sorted[2].displayName.charAt(0)}
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-amber-700 text-white rounded-full p-2 border-4 border-slate-900 shadow-xl">
+                    <Star className="h-5 w-5 fill-white" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">{sorted[2].displayName}</h3>
+                <div className="text-indigo-400 font-black text-2xl">{sorted[2].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
+              </motion.div>
             </div>
           )}
 
-          {/* Leaderboard List */}
-          <div className="space-y-3">
-            {topTen.map((row, index) => {
-              const isTop = index === 0;
-              const isSilver = index === 1;
-              const isBronze = index === 2;
-              const isMe = row.uid === user?.uid;
-              return (
-                <motion.div
-                  key={row.uid}
-                  initial={{ y: 16, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: index * 0.04 }}
-                  className={`flex items-center gap-4 rounded-xl border p-4 md:p-5 transition-all duration-200 ${
-                    isMe && !isTop
-                      ? "border-indigo-200 bg-indigo-50 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/10"
-                      : isTop
-                        ? "border-amber-400/50 bg-amber-50 shadow-sm dark:border-amber-500/50 dark:bg-amber-500/10 ring-1 ring-amber-400"
-                        : "border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md"
-                  }`}
-                >
-                  {/* Rank badge */}
-                  <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl font-bold text-sm ${
-                    isTop
-                      ? "bg-amber-500 text-white shadow-sm"
-                      : isSilver
-                        ? "bg-slate-400 text-white shadow-sm"
-                        : isBronze
-                          ? "bg-amber-700 text-white shadow-sm"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  }`}>
-                    {isTop ? <Trophy className="h-5 w-5" /> : isSilver ? <Medal className="h-5 w-5" /> : index + 1}
-                  </div>
+          {/* List for the rest */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            <AnimatePresence>
+              {sorted.slice(3).map((row, index) => {
+                const actualIndex = index + 3;
+                const isMe = row.uid === user?.uid;
+                return (
+                  <motion.div
+                    key={row.uid}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={cn(
+                      "flex items-center gap-6 rounded-[24px] border p-4 md:p-6 transition-all duration-300",
+                      isMe 
+                        ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.1)] relative overflow-hidden" 
+                        : "bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10"
+                    )}
+                  >
+                    {isMe && <div className="absolute inset-y-0 left-0 w-1 bg-indigo-500" />}
+                    
+                    {/* Rank */}
+                    <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 font-black text-slate-500">
+                      #{actualIndex + 1}
+                    </div>
 
-                  {/* Avatar */}
-                  <div className={`shrink-0 h-11 w-11 rounded-full bg-gradient-to-br ${getDeterministicGradient(row.uid)} flex items-center justify-center text-white font-black text-lg shadow-inner border border-white/20`}>
-                    {row.displayName.charAt(0).toUpperCase()}
-                  </div>
+                    {/* Avatar */}
+                    <div className={`shrink-0 h-12 w-12 rounded-full bg-gradient-to-br ${getDeterministicGradient(row.uid)} p-[2px]`}>
+                      <div className="h-full w-full rounded-full border-2 border-slate-950 bg-slate-900 flex items-center justify-center text-white font-black text-xl">
+                        {row.displayName.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className={`font-bold text-base truncate ${
-                        isTop ? "text-amber-700 dark:text-amber-400"
-                          : isMe ? "text-indigo-600 dark:text-indigo-400"
-                            : "text-slate-900 dark:text-slate-100"
-                      }`}>
-                        {row.displayName}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3">
+                        <p className={cn("font-bold text-lg truncate", isMe ? "text-indigo-400" : "text-white")}>
+                          {row.displayName}
+                        </p>
+                        {isMe && <span className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-indigo-400 border border-indigo-500/20">You</span>}
+                      </div>
+                      <div className="mt-1 flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                        {row.streak > 0 && <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-amber-500 fill-amber-500" /> {row.streak}D STREAK</span>}
+                        {row.completedTasks > 0 && <span className="flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-emerald-500" /> {row.completedTasks} TASKS</span>}
+                      </div>
+                    </div>
+
+                    {/* Coins */}
+                    <div className="shrink-0 text-right">
+                      <p className={cn("text-2xl font-black tabular-nums", isMe ? "text-indigo-400" : "text-white text-opacity-90")}>
+                        {row.coins.toLocaleString()}
                       </p>
-                      {isMe && <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-2 py-0.5 rounded-md">You</span>}
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Balance</p>
                     </div>
-                    <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {row.streak > 0 && <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" />{row.streak}d streak</span>}
-                      {row.completedTasks > 0 && <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-emerald-500" />{row.completedTasks} tasks</span>}
-                      {row.failureSummary && <span className="text-rose-500">{row.failureSummary}</span>}
-                    </div>
-                  </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
 
-                  {/* Coins */}
-                  <div className="shrink-0 text-right">
-                    <p className={`text-2xl font-black tabular-nums ${
-                      isTop ? "text-amber-600 dark:text-amber-400"
-                        : isMe ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-slate-800 dark:text-slate-100"
-                    }`}>
-                      {row.coins.toLocaleString()}
-                    </p>
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">coins</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            {topTen.length === 0 && !loading && (
-              <div className="text-center py-16 border border-dashed border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-slate-900/50">
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No scholars ranked yet. Click Refresh to compute the first ranking!</p>
+            {sorted.length === 0 && !loading && (
+              <div className="text-center py-20 rounded-[32px] border border-dashed border-white/10 bg-white/[0.02]">
+                <Trophy className="h-12 w-12 text-white/5 mx-auto mb-4" />
+                <p className="text-sm text-slate-400 font-medium">No scholars ranked yet. Sync your wallet to start the climb!</p>
               </div>
             )}
           </div>
