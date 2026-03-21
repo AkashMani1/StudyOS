@@ -130,23 +130,23 @@ export default function LeaderboardPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-400 ring-1 ring-indigo-500/20">
-            <Star className="h-3 w-3 fill-indigo-400" />
+          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400 ring-1 ring-indigo-500/20">
+            <Star className="h-3 w-3 fill-indigo-500 dark:fill-indigo-400" />
             Global Rankings
           </div>
-          <h1 className="font-display text-5xl font-black text-white tracking-tight">
-            Hall of <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400">Scholars</span>
+          <h1 className="font-display text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+            Hall of <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 dark:from-indigo-400 dark:via-purple-400 dark:to-fuchsia-400">Scholars</span>
           </h1>
-          <p className="max-w-md text-sm font-medium text-slate-400 leading-relaxed">
+          <p className="max-w-md text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
             {lastUpdated ? `Syncing with global wallet: ${lastUpdated.toLocaleTimeString()}` : "Real-time verification of study stakes and achievements."}
           </p>
         </div>
         <button
           onClick={() => void load(true)}
           disabled={loading}
-          className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+          className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-6 py-3 text-sm font-bold text-slate-900 dark:text-white transition-all hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 text-indigo-400 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
+          <RefreshCw className={`h-4 w-4 text-indigo-500 dark:text-indigo-400 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
           {loading ? "Syncing..." : "Sync Wallet"}
           <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
         </button>
@@ -166,16 +166,16 @@ export default function LeaderboardPage() {
               >
                 <div className="relative mb-4">
                   <div className={`h-24 w-24 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[1].uid)} p-1 shadow-[0_0_30px_rgba(148,163,184,0.2)]`}>
-                    <div className="h-full w-full rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center text-3xl font-black text-white overflow-hidden uppercase">
+                    <div className="h-full w-full rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl font-black text-slate-900 dark:text-white overflow-hidden uppercase">
                       {sorted[1].displayName.charAt(0)}
                     </div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-slate-400 text-white rounded-full p-2 border-4 border-slate-900 shadow-xl">
+                  <div className="absolute -bottom-2 -right-2 bg-slate-400 text-white rounded-full p-2 border-4 border-white dark:border-slate-900 shadow-xl">
                     <Medal className="h-5 w-5" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">{sorted[1].displayName}</h3>
-                <div className="text-indigo-400 font-black text-2xl">{sorted[1].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">{sorted[1].displayName}</h3>
+                <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-2xl">{sorted[1].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
               </motion.div>
 
               {/* Rank 1 */}
@@ -185,20 +185,20 @@ export default function LeaderboardPage() {
                 className="order-1 md:order-2 flex flex-col items-center mb-8 md:mb-12 relative"
               >
                 <div className="absolute -top-16 animate-bounce">
-                  <Crown className="h-12 w-12 text-amber-400 fill-amber-400" />
+                  <Crown className="h-12 w-12 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
                 </div>
                 <div className="relative mb-6">
                   <div className={`h-32 w-32 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[0].uid)} p-[6px] shadow-[0_0_50px_rgba(245,158,11,0.3)] ring-4 ring-amber-500/20`}>
-                    <div className="h-full w-full rounded-full border-4 border-slate-950 bg-slate-900 flex items-center justify-center text-4xl font-black text-white overflow-hidden uppercase">
+                    <div className="h-full w-full rounded-full border-4 border-white dark:border-slate-950 bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-4xl font-black text-slate-900 dark:text-white overflow-hidden uppercase">
                       {sorted[0].displayName.charAt(0)}
                     </div>
                   </div>
-                  <div className="absolute -bottom-3 -right-3 bg-amber-500 text-white rounded-full p-3 border-4 border-slate-900 shadow-2xl scale-125">
+                  <div className="absolute -bottom-3 -right-3 bg-amber-500 text-white rounded-full p-3 border-4 border-white dark:border-slate-900 shadow-2xl scale-125">
                     <Trophy className="h-6 w-6" />
                   </div>
                 </div>
-                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-2">{sorted[0].displayName}</h3>
-                <div className="text-amber-500 font-extrabold text-4xl tabular-nums drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 mb-2 leading-tight">{sorted[0].displayName}</h3>
+                <div className="text-amber-600 dark:text-amber-500 font-extrabold text-4xl tabular-nums drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
                   {sorted[0].coins.toLocaleString()}
                   <span className="text-sm uppercase ml-1 opacity-60">Coins</span>
                 </div>
@@ -213,16 +213,16 @@ export default function LeaderboardPage() {
               >
                 <div className="relative mb-4">
                   <div className={`h-24 w-24 rounded-full bg-gradient-to-br ${getDeterministicGradient(sorted[2].uid)} p-1 shadow-[0_0_30px_rgba(180,83,9,0.2)]`}>
-                    <div className="h-full w-full rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center text-3xl font-black text-white overflow-hidden uppercase">
+                    <div className="h-full w-full rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl font-black text-slate-900 dark:text-white overflow-hidden uppercase">
                       {sorted[2].displayName.charAt(0)}
                     </div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-amber-700 text-white rounded-full p-2 border-4 border-slate-900 shadow-xl">
+                  <div className="absolute -bottom-2 -right-2 bg-amber-700 text-white rounded-full p-2 border-4 border-white dark:border-slate-900 shadow-xl">
                     <Star className="h-5 w-5 fill-white" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">{sorted[2].displayName}</h3>
-                <div className="text-indigo-400 font-black text-2xl">{sorted[2].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">{sorted[2].displayName}</h3>
+                <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-2xl">{sorted[2].coins.toLocaleString()}<span className="text-xs uppercase ml-1 opacity-50">C</span></div>
               </motion.div>
             </div>
           )}
@@ -243,19 +243,19 @@ export default function LeaderboardPage() {
                       "flex items-center gap-6 rounded-[24px] border p-4 md:p-6 transition-all duration-300",
                       isMe 
                         ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.1)] relative overflow-hidden" 
-                        : "bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10"
+                        : "bg-slate-100/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/10"
                     )}
                   >
                     {isMe && <div className="absolute inset-y-0 left-0 w-1 bg-indigo-500" />}
                     
                     {/* Rank */}
-                    <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 font-black text-slate-500">
+                    <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 dark:bg-white/5 font-black text-slate-500 dark:text-slate-400">
                       #{actualIndex + 1}
                     </div>
 
                     {/* Avatar */}
                     <div className={`shrink-0 h-12 w-12 rounded-full bg-gradient-to-br ${getDeterministicGradient(row.uid)} p-[2px]`}>
-                      <div className="h-full w-full rounded-full border-2 border-slate-950 bg-slate-900 flex items-center justify-center text-white font-black text-xl">
+                      <div className="h-full w-full rounded-full border-2 border-white dark:border-slate-950 bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-900 dark:text-white font-black text-xl">
                         {row.displayName.charAt(0).toUpperCase()}
                       </div>
                     </div>
@@ -263,23 +263,23 @@ export default function LeaderboardPage() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
-                        <p className={cn("font-bold text-lg truncate", isMe ? "text-indigo-400" : "text-white")}>
+                        <p className={cn("font-bold text-lg truncate", isMe ? "text-indigo-600 dark:text-indigo-400" : "text-slate-900 dark:text-white")}>
                           {row.displayName}
                         </p>
-                        {isMe && <span className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-indigo-400 border border-indigo-500/20">You</span>}
+                        {isMe && <span className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">You</span>}
                       </div>
-                      <div className="mt-1 flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      <div className="mt-1 flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         {row.streak > 0 && <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-amber-500 fill-amber-500" /> {row.streak}D STREAK</span>}
-                        {row.completedTasks > 0 && <span className="flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-emerald-500" /> {row.completedTasks} TASKS</span>}
+                        {row.completedTasks > 0 && <span className="flex items-center gap-1.5"><TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400" /> {row.completedTasks} TASKS</span>}
                       </div>
                     </div>
 
                     {/* Coins */}
                     <div className="shrink-0 text-right">
-                      <p className={cn("text-2xl font-black tabular-nums", isMe ? "text-indigo-400" : "text-white text-opacity-90")}>
+                      <p className={cn("text-2xl font-black tabular-nums", isMe ? "text-indigo-600 dark:text-indigo-400" : "text-slate-900 dark:text-white")}>
                         {row.coins.toLocaleString()}
                       </p>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Balance</p>
+                      <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none">Balance</p>
                     </div>
                   </motion.div>
                 );
@@ -287,9 +287,9 @@ export default function LeaderboardPage() {
             </AnimatePresence>
 
             {sorted.length === 0 && !loading && (
-              <div className="text-center py-20 rounded-[32px] border border-dashed border-white/10 bg-white/[0.02]">
-                <Trophy className="h-12 w-12 text-white/5 mx-auto mb-4" />
-                <p className="text-sm text-slate-400 font-medium">No scholars ranked yet. Sync your wallet to start the climb!</p>
+              <div className="text-center py-20 rounded-[32px] border border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02]">
+                <Trophy className="h-12 w-12 text-slate-300 dark:text-white/5 mx-auto mb-4" />
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No scholars ranked yet. Sync your wallet to start the climb!</p>
               </div>
             )}
           </div>
