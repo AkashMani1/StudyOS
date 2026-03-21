@@ -60,20 +60,27 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Auth check for protected page routes ──
-  if (!pathname.startsWith("/api/")) {
-    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-    const sessionSecret = process.env.SESSION_SECRET;
+    // ── Auth check for protected page routes ──
+    if (!pathname.startsWith("/api/")) {
+      // Allow unauthenticated access to the main dashboard for "Explore Mode"
+      const isExplorePath = pathname === "/dashboard";
+      
+      const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+      const sessionSecret = process.env.SESSION_SECRET;
 
-    if (!sessionCookie || !sessionSecret) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+      if (!sessionCookie || !sessionSecret) {
+        if (isExplorePath) return NextResponse.next();
+        
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("redirect", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
 
     const session = await verifySessionCookieEdge(sessionCookie, sessionSecret);
 
     if (!session) {
+      if (isExplorePath) return NextResponse.next();
+      
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);

@@ -60,8 +60,8 @@ export default function DashboardPage() {
           strapi.getExploreSessions(),
         ]);
         if (p) setExploreProfile(p);
-        if (t) setExploreTasks(t);
-        if (s) setExploreSessions(s);
+        if (t && t.length > 0) setExploreTasks(t);
+        if (s && s.length > 0) setExploreSessions(s);
       };
       fetchExploreContent();
     }
