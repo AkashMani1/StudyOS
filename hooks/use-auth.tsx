@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   updateProfile,
+  sendPasswordResetEmail,
   type User
 } from "firebase/auth";
 import {
@@ -38,6 +39,7 @@ interface AuthContextValue {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -245,6 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetch("/api/session/logout", { method: "POST" });
   }, []);
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+    await trackEvent("screen_view", { source: "password_reset_request" });
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -254,9 +261,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
-      signOut
+      signOut,
+      sendPasswordReset
     }),
-    [loading, profile, session, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, user]
+    [loading, profile, session, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail, user, sendPasswordReset]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

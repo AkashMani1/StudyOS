@@ -11,8 +11,8 @@ export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
   const redirectTarget = params.get("redirect") ?? "/dashboard";
-  const { signInWithEmail, signInWithGoogle, signUpWithEmail, loading, user } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const { signInWithEmail, signInWithGoogle, signUpWithEmail, sendPasswordReset, loading, user } = useAuth();
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,6 +46,11 @@ export default function LoginPage() {
     try {
       if (mode === "login") {
         await signInWithEmail(email, password);
+      } else if (mode === "reset") {
+        await sendPasswordReset(email);
+        toast.success("Password reset email sent! Check your inbox.");
+        setMode("login");
+        return;
       } else {
         try {
           await signUpWithEmail(name, email, password);
@@ -119,8 +124,18 @@ export default function LoginPage() {
         <Card className="mx-auto w-full max-w-xl space-y-6">
           <SectionHeading
             eyebrow="Authentication"
-            title={mode === "login" ? "Sign in to StudyOS" : "Create your StudyOS account"}
-            description="Create your profile and start using StudyOS with Google or email/password."
+            title={
+              mode === "login" 
+                ? "Sign in to StudyOS" 
+                : mode === "signup"
+                ? "Create your StudyOS account"
+                : "Reset your password"
+            }
+            description={
+              mode === "reset"
+                ? "Enter your email address and we'll send you a link to reset your password."
+                : "Create your profile and start using StudyOS with Google or email/password."
+            }
           />
 
           <div className="flex gap-3">
@@ -131,9 +146,15 @@ export default function LoginPage() {
               className="flex-1"
               disabled={submitting}
               variant="ghost"
-              onClick={() => setMode((current) => (current === "login" ? "signup" : "login"))}
+              onClick={() => {
+                if (mode === "reset") {
+                  setMode("login");
+                } else {
+                  setMode((current) => (current === "login" ? "signup" : "login"));
+                }
+              }}
             >
-              {mode === "login" ? "Need an account?" : "Have an account?"}
+              {mode === "login" ? "Need an account?" : mode === "signup" ? "Have an account?" : "Back to Sign In"}
             </Button>
           </div>
 
@@ -142,14 +163,29 @@ export default function LoginPage() {
               <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Display name" />
             ) : null}
             <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" type="email" />
-            <Input
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
-              type="password"
-            />
-            <Button className="w-full" disabled={submitting || !email.trim() || !password.trim() || (mode === "signup" && !name.trim())} type="submit">
-              {submitting ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
+            
+            {mode !== "reset" ? (
+              <div className="space-y-2">
+                <Input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Password"
+                  type="password"
+                />
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => setMode("reset")}
+                    className="text-xs font-medium text-slate-500 hover:text-comet transition-colors dark:text-slate-400"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+            ) : null}
+
+            <Button className="w-full" disabled={submitting || !email.trim() || (mode !== "reset" && !password.trim()) || (mode === "signup" && !name.trim())} type="submit">
+              {submitting ? "Please wait..." : mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
             </Button>
           </form>
 
@@ -161,3 +197,4 @@ export default function LoginPage() {
     </main>
   );
 }
+
