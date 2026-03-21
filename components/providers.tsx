@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/use-auth";
+import { useExtensionSync } from "@/hooks/use-extension-sync";
 import { useFCMRegistration } from "@/hooks/use-fcm";
 import { initAnalytics, trackScreenView } from "@/lib/analytics";
 
@@ -12,6 +13,7 @@ function AppEffects() {
   const pathname = usePathname();
 
   useFCMRegistration();
+  useExtensionSync();
 
   useEffect(() => {
     void initAnalytics();

@@ -115,6 +115,11 @@ export interface AppUserProfile {
     transactions: WalletTransaction[];
   };
   preferences: StudyPreferences;
+  sessionActive?: boolean;
+  currentSessionId?: string;
+  currentSessionSubject?: string;
+  currentTask?: string;
+  sessionEndTime?: string;
   createdAt?: TimestampValue | null;
   updatedAt?: TimestampValue | null;
 }
