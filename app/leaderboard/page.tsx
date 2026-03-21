@@ -147,7 +147,7 @@ export default function LeaderboardPage() {
           className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-6 py-3 text-sm font-bold text-slate-900 dark:text-white transition-all hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 text-indigo-500 dark:text-indigo-400 ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
-          {loading ? "Syncing..." : "Sync Wallet"}
+          {loading ? "Syncing..." : "Sync Board"}
           <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
         </button>
       </header>
