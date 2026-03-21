@@ -10,7 +10,8 @@ import type {
   LeaderboardScore,
   RescheduleResponse,
   WeeklyInsightResponse,
-  StudyPreferences
+  StudyPreferences,
+  AppUserProfile
 } from "@/types/domain";
 
 export async function createGoal(uid: string, goal: GoalDoc, request: GeneratePlanRequest): Promise<GeneratePlanResponse> {
@@ -107,4 +108,13 @@ export async function rescheduleTask(taskId: string, newDate: string): Promise<v
     id: taskId,
     suggestedDay: newDate
   });
+}
+
+export async function updateProfile(profile: {
+  displayName?: string;
+  bio?: string;
+  school?: string;
+  avatarId?: string;
+}): Promise<{ status: "ok" }> {
+  return postJson<Partial<AppUserProfile>, { status: "ok" }>("/api/profile", profile);
 }

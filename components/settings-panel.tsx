@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { SubscriptionCard } from "@/components/subscription-card";
+import { ProfileCard } from "@/components/profile-card";
 import { Button, Card, Input, SectionHeading } from "@/components/ui";
 import { useAuth } from "@/hooks/use-auth";
 import { getExploreProfile } from "@/lib/explore-data";
@@ -44,7 +44,7 @@ export function SettingsPanel() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-      <SubscriptionCard />
+      <ProfileCard />
       <Card className="space-y-5">
         <SectionHeading
           eyebrow="Settings"

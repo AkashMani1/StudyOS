@@ -115,6 +115,10 @@ export interface AppUserProfile {
     transactions: WalletTransaction[];
   };
   preferences: StudyPreferences;
+  avatarId?: string;
+  bio?: string;
+  school?: string;
+  lastProfileUpdate?: TimestampValue | string | null;
   sessionActive?: boolean;
   currentSessionId?: string;
   currentSessionSubject?: string;

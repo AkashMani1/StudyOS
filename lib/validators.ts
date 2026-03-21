@@ -84,3 +84,12 @@ export const dailyPlanSchema = z.object({
   date: z.string().date().optional(),
   useAi: z.boolean().optional()
 });
+
+export const profileUpdateSchema = z.object({
+  displayName: z.string().trim().min(2).max(50).optional(),
+  bio: z.string().trim().max(160).optional(),
+  school: z.string().trim().max(100).optional(),
+  avatarId: z.string().trim().min(1).max(50).optional(),
+  email: z.string().email().optional(),
+  fcmToken: z.string().min(1).max(512).nullable().optional()
+});

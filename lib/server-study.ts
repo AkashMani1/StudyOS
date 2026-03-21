@@ -762,3 +762,19 @@ export async function createSessionPayload(idToken: string): Promise<SessionPayl
     exp: Date.now() + 1000 * 60 * 60 * 24 * 7
   };
 }
+
+export async function updateUserProfile(uid: string, profile: {
+  displayName?: string;
+  bio?: string;
+  school?: string;
+  avatarId?: string;
+}): Promise<void> {
+  await adminDb.collection("users").doc(uid).set(
+    {
+      ...profile,
+      lastProfileUpdate: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    },
+    { merge: true }
+  );
+}

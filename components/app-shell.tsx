@@ -22,6 +22,7 @@ import { getExploreDailyPlans, getExploreProfile, getExploreSessions, getExplore
 import { useAuth } from "@/hooks/use-auth";
 import { useStudyData } from "@/hooks/use-study-data";
 import { cn, initials } from "@/lib/utils";
+import { getAvatar } from "@/lib/avatars";
 import { Badge, Button } from "@/components/ui";
 import { FloatingCoach } from "@/components/floating-coach";
 import { SectionTabs } from "@/components/section-tabs";
@@ -96,8 +97,14 @@ export function AppShell({
               <>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold">
-                      {initials(viewer.displayName || "Student")}
+                    <div className={cn(
+                      "flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-inner",
+                      getAvatar(viewer.avatarId).color
+                    )}>
+                      {(() => {
+                        const { icon: AvatarIcon } = getAvatar(viewer.avatarId);
+                        return <AvatarIcon className="h-7 w-7" />;
+                      })()}
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.28em] text-white/60">{isExplore ? "Explore profile" : "Student profile"}</p>

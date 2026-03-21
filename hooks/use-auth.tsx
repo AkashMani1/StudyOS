@@ -173,29 +173,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile((current) => current ?? createFallbackProfile(nextUser, nextSession));
 
       const profileRef = doc(db, "users", nextUser.uid);
-      const response = await fetch("/api/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          displayName: nextUser.displayName ?? "Focused Student",
-          email: nextUser.email ?? "",
-          fcmToken: null
-        })
-      }).catch(() => null);
-
-      if (!response?.ok) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(false);
-      unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
+      
+      // Setup the profile listener first
+      unsubscribeProfile = onSnapshot(profileRef, async (snapshot) => {
         const nextProfile = snapshot.data() as AppUserProfile | undefined;
-        setProfile(nextProfile ?? createFallbackProfile(nextUser, nextSession));
+        
+        // If profile doesn't exist in Firestore, initialize it
+        if (!nextProfile) {
+          await fetch("/api/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              displayName: nextUser.displayName ?? "Focused Student",
+              email: nextUser.email ?? "",
+              fcmToken: null
+            })
+          }).catch(() => null);
+        } else {
+          setProfile(nextProfile);
+        }
       });
+
       profileListenerUid = nextUser.uid;
+      setLoading(false);
+      return;
     });
 
     return () => {

@@ -858,7 +858,7 @@ async function sendUpcomingSessionReminder() {
     const minutesUntilStart = Math.round((Date.parse(block.startTime) - now) / 60000);
     const reminderKey = `${block.id}:${block.startTime}`;
 
-    if (minutesUntilStart >= 0 && minutesUntilStart <= 10 && !log[reminderKey]) {
+    if (minutesUntilStart >= 0 && minutesUntilStart <= 15 && !log[reminderKey]) {
       await chrome.notifications.create(`upcoming-${block.id}`, {
         type: "basic",
         iconUrl: "icons/icon128.png",

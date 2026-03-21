@@ -42,6 +42,9 @@ function currentWeekDays(): string[] {
 export function getExploreProfile(): AppUserProfile {
   return {
     displayName: "Explore Mode",
+    avatarId: "brain",
+    bio: "I am a demo student exploring the StudyOS ecosystem. I love efficient planning and deep work sessions.",
+    school: "StudyOS University",
     email: "",
     role: "user",
     fcmToken: null,
