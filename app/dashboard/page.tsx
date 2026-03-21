@@ -22,6 +22,8 @@ import { CreateTaskDialog } from "@/components/create-task-dialog";
 import { useStudyData } from "@/hooks/use-study-data";
 import { useAuth } from "@/hooks/use-auth";
 import { getExploreProfile, getExploreSessions, getExploreTasks } from "@/lib/explore-data";
+import { strapi } from "@/lib/strapi";
+import { useEffect } from "react";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -42,9 +44,32 @@ function getMotivation(focusScore: number, missedCount: number): string {
 export default function DashboardPage() {
   const { profile, user } = useAuth();
   const { tasks, sessions } = useStudyData();
-  const visibleProfile = user ? profile : getExploreProfile();
-  const visibleSessions = user ? sessions : getExploreSessions();
-  const visibleTasks = user ? tasks : getExploreTasks();
+  
+  // Local state for dynamically fetched explore data
+  const [exploreProfile, setExploreProfile] = useState(getExploreProfile());
+  const [exploreTasks, setExploreTasks] = useState(getExploreTasks());
+  const [exploreSessions, setExploreSessions] = useState(getExploreSessions());
+
+  useEffect(() => {
+    // If user is not logged in, attempt to fetch fresh explore data from Strapi
+    if (!user) {
+      const fetchExploreContent = async () => {
+        const [p, t, s] = await Promise.all([
+          strapi.getExploreProfile(),
+          strapi.getExploreTasks(),
+          strapi.getExploreSessions(),
+        ]);
+        if (p) setExploreProfile(p);
+        if (t) setExploreTasks(t);
+        if (s) setExploreSessions(s);
+      };
+      fetchExploreContent();
+    }
+  }, [user]);
+
+  const visibleProfile = user ? profile : exploreProfile;
+  const visibleSessions = user ? sessions : exploreSessions;
+  const visibleTasks = user ? tasks : exploreTasks;
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   

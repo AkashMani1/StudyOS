@@ -1,0 +1,38 @@
+{
+  "Feature": {
+    "kind": "collectionType",
+    "attributes": {
+      "title": { "type": "string", "required": true },
+      "description": { "type": "text", "required": true },
+      "icon": { "type": "string", "required": true },
+      "color": { "type": "string", "required": true },
+      "bg": { "type": "string", "required": true },
+      "order": { "type": "integer", "default": 0 }
+    }
+  },
+  "Hero": {
+    "kind": "singleType",
+    "attributes": {
+      "title": { "type": "string", "required": true },
+      "subtitle": { "type": "text", "required": true },
+      "badge": { "type": "string" }
+    }
+  },
+  "Step": {
+    "kind": "collectionType",
+    "attributes": {
+      "step": { "type": "string", "required": true },
+      "title": { "type": "string", "required": true },
+      "description": { "type": "text", "required": true },
+      "accent": { "type": "string" },
+      "line": { "type": "string" },
+      "order": { "type": "integer" }
+    }
+  },
+  "Quote": {
+    "kind": "singleType",
+    "attributes": {
+      "text": { "type": "text", "required": true }
+    }
+  }
+}
