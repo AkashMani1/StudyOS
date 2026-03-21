@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Coins, Flame, Target, TrendingUp, Plus } from "lucide-react";
 import { CoachChat } from "@/components/coach-chat";
 import { EmptyState } from "@/components/empty-state";
@@ -46,13 +46,21 @@ export default function DashboardPage() {
   const visibleSessions = user ? sessions : getExploreSessions();
   const visibleTasks = user ? tasks : getExploreTasks();
 
-  const activeTasks = visibleTasks.filter((task) => !task.completed).length;
-  const completedSessions = visibleSessions.filter((session) => session.completed).length;
-  const missedSessions = visibleSessions.filter((session) => !session.completed).length;
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  
+  const todayTasks = useMemo(() => 
+    visibleTasks.filter((task) => task.suggestedDay === today),
+    [visibleTasks, today]
+  );
+
+  const activeTasks = todayTasks.filter((task) => !task.completed).length;
+  const completedToday = todayTasks.filter((task) => task.completed).length;
+  const missedToday = todayTasks.filter((task) => !task.completed).length;
+  
   const focusScore =
-    visibleSessions.length === 0
+    todayTasks.length === 0
       ? 0
-      : Math.round((completedSessions / visibleSessions.length) * 100);
+      : Math.round((completedToday / todayTasks.length) * 100);
 
   const displayName = visibleProfile?.displayName ?? "Student";
   const firstName = displayName.split(" ")[0];
@@ -90,11 +98,11 @@ export default function DashboardPage() {
                 {getGreeting()}, <span className="text-white">{firstName}</span>
               </p>
               <h2 className="font-display text-2xl font-bold sm:text-3xl">
-                {getMotivation(focusScore, missedSessions)}
+                {getMotivation(focusScore, missedToday)}
               </h2>
               <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
                 <StatChip icon={Target} label="Tasks left" value={activeTasks} trend={activeTasks > 5 ? "down" : "up"} />
-                <StatChip icon={Flame} label="Streak" value={`${completedSessions}`} trend="up" />
+                <StatChip icon={Flame} label="Done Today" value={`${completedToday}`} trend="up" />
                 <StatChip icon={Coins} label="Coins" value={visibleProfile?.wallet.coins ?? 0} trend="neutral" />
               </div>
             </div>
@@ -126,7 +134,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Sessions done</p>
-              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{completedSessions}<span className="text-sm font-medium text-slate-400 ml-1">/{visibleSessions.length}</span></h3>
+              <h3 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{completedToday}<span className="text-sm font-medium text-slate-400 ml-1">/{todayTasks.length}</span></h3>
             </div>
           </Card>
           <Card className="flex items-center gap-4">
