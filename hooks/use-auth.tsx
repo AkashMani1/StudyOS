@@ -122,94 +122,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let profileListenerUid: string | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (nextUser) => {
-      setUser(nextUser);
-
-      if (unsubscribeProfile && (!nextUser || nextUser.uid !== profileListenerUid)) {
-        unsubscribeProfile();
-        unsubscribeProfile = undefined;
-        profileListenerUid = null;
-      }
-
+      // If no user, reset and clear session
       if (!nextUser) {
-        setLoading(true);
-        const nextSession = await syncSession(null);
-        commitSession(nextSession);
+        setUser(null);
+        setSession(null);
+        sessionRef.current = null;
         setProfile(null);
         setLoading(false);
+        // Inform backend about logout
+        fetch("/api/session/logout", { method: "POST" }).catch(() => null);
         return;
       }
 
-      // Skip re-sync if the existing session is for the same user and hasn't expired.
-      // This prevents burning the session-bootstrap rate limit on tab-focus events.
+      // Check if we already have a valid session for this user to avoid redundant bootstrap
       const existingSession = sessionRef.current;
-      const sessionStillValid =
-        existingSession?.uid === nextUser.uid &&
-        existingSession.exp > Date.now() + 60_000; // 1min buffer
+      const isSameUser = existingSession?.uid === nextUser.uid;
+      const isExpiringSoon = existingSession && existingSession.exp < Date.now() + 120_000; // 2min buffer
 
-      if (sessionStillValid) {
-        // Session is fine — just ensure profile listener is running
+      if (isSameUser && !isExpiringSoon) {
+        // Just ensure user state is set and profile listener is active
+        setUser(nextUser);
         if (!unsubscribeProfile) {
-          setLoading(true);
           const profileRef = doc(db, "users", nextUser.uid);
-          setLoading(false);
           unsubscribeProfile = onSnapshot(profileRef, (snapshot) => {
             const nextProfile = snapshot.data() as AppUserProfile | undefined;
-            setProfile(nextProfile ?? createFallbackProfile(nextUser, existingSession));
+            if (nextProfile) setProfile(nextProfile);
           });
           profileListenerUid = nextUser.uid;
         }
-        return;
-      }
-
-      // Full session bootstrap needed
-      setLoading(true);
-      const nextSession = await syncSession(nextUser);
-      commitSession(nextSession);
-
-      if (!nextSession) {
-        setProfile(null);
         setLoading(false);
         return;
       }
 
-      setProfile((current) => current ?? createFallbackProfile(nextUser, nextSession));
-
-      const profileRef = doc(db, "users", nextUser.uid);
-      
-      // Setup the profile listener first
-      unsubscribeProfile = onSnapshot(profileRef, async (snapshot) => {
-        const nextProfile = snapshot.data() as AppUserProfile | undefined;
-        
-        // If profile doesn't exist in Firestore, initialize it
-        if (!nextProfile) {
-          await fetch("/api/profile", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              displayName: nextUser.displayName ?? "Focused Student",
-              email: nextUser.email ?? "",
-              fcmToken: null
-            })
-          }).catch(() => null);
-
-          // Use fallback while waiting for initialization
-          setProfile(createFallbackProfile(nextUser, nextSession));
-        } else {
-          // Merge with fallback to ensure nested properties like wallet/preferences always exist
-          const fallback = createFallbackProfile(nextUser, nextSession);
-          setProfile({
-            ...fallback,
-            ...nextProfile,
-            wallet: { ...fallback.wallet, ...nextProfile.wallet },
-            preferences: { ...fallback.preferences, ...nextProfile.preferences },
-            subscription: { ...fallback.subscription, ...nextProfile.subscription }
-          });
+      // Start bootstrap
+      setLoading(true);
+      try {
+        const nextSession = await syncSession(nextUser);
+        if (!nextSession) {
+          throw new Error("Session sync failed");
         }
-      });
 
-      profileListenerUid = nextUser.uid;
-      setLoading(false);
-      return;
+        commitSession(nextSession);
+        setUser(nextUser);
+
+        // Setup profile listener with auto-bootstrap for new users
+        const profileRef = doc(db, "users", nextUser.uid);
+        
+        if (unsubscribeProfile) unsubscribeProfile();
+        
+        unsubscribeProfile = onSnapshot(profileRef, async (snapshot) => {
+          const nextProfile = snapshot.data() as AppUserProfile | undefined;
+          
+          if (!nextProfile) {
+            // New user detection: initialize profile via API
+            await fetch("/api/profile", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                displayName: nextUser.displayName ?? "Focused Student",
+                email: nextUser.email ?? "",
+                fcmToken: null
+              })
+            }).catch(() => null);
+            setProfile(createFallbackProfile(nextUser, nextSession));
+          } else {
+            // Normal profile merge
+            const fallback = createFallbackProfile(nextUser, nextSession);
+            setProfile({
+              ...fallback,
+              ...nextProfile,
+              wallet: { ...fallback.wallet, ...nextProfile.wallet },
+              preferences: { ...fallback.preferences, ...nextProfile.preferences },
+              subscription: { ...fallback.subscription, ...nextProfile.subscription }
+            });
+          }
+        });
+
+        profileListenerUid = nextUser.uid;
+      } catch (error) {
+        console.error("Auth bootstrap failed:", error);
+        setUser(null);
+        setSession(null);
+        sessionRef.current = null;
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -218,29 +215,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         unsubscribeProfile();
       }
     };
-  }, []);
+  }, [commitSession]);
 
   const signInWithGoogle = useCallback(async () => {
-    const credential = await signInWithPopup(auth, new GoogleAuthProvider());
-    const nextSession = await ensureSession(credential.user);
-    commitSession(nextSession);
+    // Just trigger the popup. onAuthStateChanged will handle the rest.
+    await signInWithPopup(auth, new GoogleAuthProvider());
     await trackEvent("screen_view", { source: "google_login" });
-  }, [commitSession]);
+  }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    const nextSession = await ensureSession(credential.user);
-    commitSession(nextSession);
+    await signInWithEmailAndPassword(auth, email, password);
     await trackEvent("screen_view", { source: "email_login" });
-  }, [commitSession]);
+  }, []);
 
   const signUpWithEmail = useCallback(async (name: string, email: string, password: string) => {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(credential.user, { displayName: name });
-    const nextSession = await ensureSession(credential.user);
-    commitSession(nextSession);
     await trackEvent("screen_view", { source: "email_signup" });
-  }, [commitSession]);
+  }, []);
 
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);

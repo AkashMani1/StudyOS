@@ -22,8 +22,6 @@ import { CreateTaskDialog } from "@/components/create-task-dialog";
 import { useStudyData } from "@/hooks/use-study-data";
 import { useAuth } from "@/hooks/use-auth";
 import { getExploreProfile, getExploreSessions, getExploreTasks } from "@/lib/explore-data";
-import { strapi } from "@/lib/strapi";
-import { useEffect } from "react";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -44,36 +42,13 @@ function getMotivation(focusScore: number, missedCount: number): string {
 export default function DashboardPage() {
   const { profile, user } = useAuth();
   const { tasks, sessions } = useStudyData();
-  
-  // Local state for dynamically fetched explore data
-  const [exploreProfile, setExploreProfile] = useState(getExploreProfile());
-  const [exploreTasks, setExploreTasks] = useState(getExploreTasks());
-  const [exploreSessions, setExploreSessions] = useState(getExploreSessions());
-
-  useEffect(() => {
-    // If user is not logged in, attempt to fetch fresh explore data from Strapi
-    if (!user) {
-      const fetchExploreContent = async () => {
-        const [p, t, s] = await Promise.all([
-          strapi.getExploreProfile(),
-          strapi.getExploreTasks(),
-          strapi.getExploreSessions(),
-        ]);
-        if (p) setExploreProfile(p);
-        if (t && t.length > 0) setExploreTasks(t);
-        if (s && s.length > 0) setExploreSessions(s);
-      };
-      fetchExploreContent();
-    }
-  }, [user]);
-
-  const visibleProfile = user ? profile : exploreProfile;
-  const visibleSessions = user ? sessions : exploreSessions;
-  const visibleTasks = user ? tasks : exploreTasks;
+  const visibleProfile = user ? profile : getExploreProfile();
+  const visibleSessions = user ? sessions : getExploreSessions();
+  const visibleTasks = user ? tasks : getExploreTasks();
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  
-  const todayTasks = useMemo(() => 
+
+  const todayTasks = useMemo(() =>
     visibleTasks.filter((task) => task.suggestedDay === today),
     [visibleTasks, today]
   );
@@ -81,7 +56,7 @@ export default function DashboardPage() {
   const activeTasks = todayTasks.filter((task) => !task.completed).length;
   const completedToday = todayTasks.filter((task) => task.completed).length;
   const missedToday = todayTasks.filter((task) => !task.completed).length;
-  
+
   const focusScore =
     todayTasks.length === 0
       ? 0
@@ -93,10 +68,10 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <CreateTaskDialog 
-        isOpen={isTaskDialogOpen} 
-        onClose={() => setIsTaskDialogOpen(false)} 
-        onSuccess={() => window.location.reload()} 
+      <CreateTaskDialog
+        isOpen={isTaskDialogOpen}
+        onClose={() => setIsTaskDialogOpen(false)}
+        onSuccess={() => window.location.reload()}
       />
 
       <header className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -105,7 +80,7 @@ export default function DashboardPage() {
           <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Your daily command center — one glance, one action, full momentum.</p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsTaskDialogOpen(true)}
           className="shrink-0 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
         >

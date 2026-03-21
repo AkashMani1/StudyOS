@@ -26,15 +26,13 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setSubmitting(true);
-
     try {
       await signInWithGoogle();
-      router.push(redirectTarget);
+      // Redirection is handled by the useEffect above once loading is false and user exists
     } catch (error: any) {
       if (error?.code !== "auth/popup-closed-by-user" && error?.code !== "auth/cancelled-popup-request") {
         toast.error("Google sign-in failed. Please try again.");
       }
-    } finally {
       setSubmitting(false);
     }
   };
@@ -50,28 +48,24 @@ export default function LoginPage() {
         await sendPasswordReset(email);
         toast.success("Password reset email sent! Check your inbox.");
         setMode("login");
+        setSubmitting(false);
         return;
       } else {
         try {
           await signUpWithEmail(name, email, password);
         } catch (error: any) {
-          // Fast authentication flow: if the user tries to sign up but the email exists,
-          // automatically attempt to log them in to save effort.
           if (error?.code === "auth/email-already-in-use" || error?.message?.includes("email-already-in-use")) {
             try {
-              // Try to log them in with the password they just provided
               await signInWithEmail(email, password);
               toast.success("Welcome back! You already had an account.");
-              router.push(redirectTarget);
               return;
             } catch (signInError: any) {
               const errCode = signInError?.code || "";
               const errMsg = signInError?.message || "";
               
-              // If the password was wrong for the existing account
               if (errCode === "auth/wrong-password" || errCode === "auth/invalid-credential" || errMsg.includes("invalid-credential")) {
                 setMode("login");
-                throw new Error("This email is already registered, but the password was incorrect. Please sign in.");
+                throw new Error("This email is already registered, but the password was incorrect.");
               }
               
               setMode("login");
@@ -81,17 +75,16 @@ export default function LoginPage() {
           throw error;
         }
       }
-
-      router.push(redirectTarget);
+      // Redirection is handled by the useEffect
     } catch (error: any) {
       const code = error?.code || "";
       const message = error?.message || "";
       let friendlyMessage = "Authentication failed.";
       
       if (code === "auth/invalid-credential" || code === "auth/wrong-password" || message.includes("invalid-credential")) {
-        friendlyMessage = mode === "login" ? "Invalid email or password." : "Incorrect password for this existing account.";
+        friendlyMessage = mode === "login" ? "Invalid email or password." : "Incorrect password for this account.";
       } else if (code === "auth/user-not-found" || message.includes("user-not-found")) {
-        friendlyMessage = "No account found. Please switch to create account.";
+        friendlyMessage = "No account found. Please sign up.";
       } else if (code === "auth/weak-password" || message.includes("weak-password")) {
         friendlyMessage = "Password should be at least 6 characters.";
       } else if (code === "auth/too-many-requests" || message.includes("too-many-requests")) {
@@ -101,7 +94,6 @@ export default function LoginPage() {
       }
       
       toast.error(friendlyMessage);
-    } finally {
       setSubmitting(false);
     }
   };
