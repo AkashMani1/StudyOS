@@ -174,9 +174,20 @@ export function getExploreInsights(): WeeklyInsightDoc[] {
     {
       id: "explore-insight-1",
       generatedAt: null,
-      actionItems: [],
-      report:
-        "Your strongest window is early morning. Evening misses climb when the task depends on mood instead of a fixed start. The next jump comes from protecting one non-negotiable session each day."
+      reportCard: {
+        grade: "A",
+        summary: "Solid execution during high-focus morning windows. Minor session abandonment noted in late evenings."
+      },
+      focusScoreFeedback: "You maintain a high focus level (84%) during deep work sessions, especially when starting before 8 AM.",
+      bestStudyTimeFeedback: "Your strongest window is early morning. Evening misses climb when tasks depend on mood instead of a fixed start.",
+      deepInsights: [
+        "Consistent Monday-Thursday consistency improves retention.",
+        "Short breaks (5-10m) between focused sprints correlate with longer total study time."
+      ],
+      actionItems: [
+        "Protect your 7:00 AM block — it's your highest ROI period.",
+        "Set a harder 'No-Screens' policy after 10 PM to improve next-day morning focus."
+      ]
     }
   ];
 }

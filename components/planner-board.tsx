@@ -82,6 +82,7 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
   }, [selectedDay]);
 
   const isPast = useMemo(() => {
+    if (!selectedDay) return false;
     const today = new Date().toISOString().slice(0, 10);
     return selectedDay < today;
   }, [selectedDay]);
