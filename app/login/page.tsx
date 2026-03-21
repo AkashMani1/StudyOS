@@ -54,16 +54,26 @@ export default function LoginPage() {
           // automatically attempt to log them in to save effort.
           if (error?.code === "auth/email-already-in-use" || error?.message?.includes("email-already-in-use")) {
             try {
+              // Try to log them in with the password they just provided
               await signInWithEmail(email, password);
               toast.success("Welcome back! You already had an account.");
               router.push(redirectTarget);
               return;
             } catch (signInError: any) {
+              const errCode = signInError?.code || "";
+              const errMsg = signInError?.message || "";
+              
+              // If the password was wrong for the existing account
+              if (errCode === "auth/wrong-password" || errCode === "auth/invalid-credential" || errMsg.includes("invalid-credential")) {
+                setMode("login");
+                throw new Error("This email is already registered, but the password was incorrect. Please sign in.");
+              }
+              
               setMode("login");
               throw new Error("This email is already registered. Please sign in instead.");
             }
           }
-          throw error; // Let other errors bubble up
+          throw error;
         }
       }
 
@@ -73,7 +83,7 @@ export default function LoginPage() {
       const message = error?.message || "";
       let friendlyMessage = "Authentication failed.";
       
-      if (code === "auth/invalid-credential" || message.includes("invalid-credential")) {
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password" || message.includes("invalid-credential")) {
         friendlyMessage = mode === "login" ? "Invalid email or password." : "Incorrect password for this existing account.";
       } else if (code === "auth/user-not-found" || message.includes("user-not-found")) {
         friendlyMessage = "No account found. Please switch to create account.";

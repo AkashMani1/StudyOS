@@ -103,7 +103,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
                 <StatChip icon={Target} label="Tasks left" value={activeTasks} trend={activeTasks > 5 ? "down" : "up"} />
                 <StatChip icon={Flame} label="Done Today" value={`${completedToday}`} trend="up" />
-                <StatChip icon={Coins} label="Coins" value={visibleProfile?.wallet.coins ?? 0} trend="neutral" />
+                <StatChip icon={Coins} label="Coins" value={visibleProfile?.wallet?.coins ?? 0} trend="neutral" />
               </div>
             </div>
             <div className="shrink-0">
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Coins banked</p>
-              <h3 className="font-display text-2xl font-bold">{visibleProfile?.wallet.coins ?? 0}</h3>
+              <h3 className="font-display text-2xl font-bold">{visibleProfile?.wallet?.coins ?? 0}</h3>
             </div>
           </Card>
         </section>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
         <StudentProfileCard profile={visibleProfile} />
 
         {/* ── Wallet ── */}
-        <WalletCard coins={visibleProfile?.wallet.coins ?? 0} transactions={visibleProfile?.wallet.transactions ?? []} />
+        <WalletCard coins={visibleProfile?.wallet?.coins ?? 0} transactions={visibleProfile?.wallet?.transactions ?? []} />
 
         {/* ── Plan vs Reality ── */}
         {visibleTasks.length === 0 ? (

@@ -16,10 +16,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await parseRequestBody(request, profileUpdateSchema);
-    const profile = await adminDb.collection("users").doc(session.uid).get();
-    const data = profile.data() as AppUserProfile | undefined;
+    const profileRef = adminDb.collection("users").doc(session.uid);
+    const profileDoc = await profileRef.get();
+    const data = profileDoc.data() as AppUserProfile | undefined;
 
-    if (data?.lastProfileUpdate) {
+    // Check if we are initializing a new profile or updating an existing one
+    const isNewProfile = !profileDoc.exists;
+
+    if (!isNewProfile && data?.lastProfileUpdate) {
       const lastUpdate = (data.lastProfileUpdate as any).toDate?.() || new Date(data.lastProfileUpdate as string);
       const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
       const now = new Date();
@@ -35,12 +39,20 @@ export async function POST(request: Request) {
 
     await enforceApiRateLimit(request, {
       scope: "profile-update",
-      limit: 5,
+      limit: 10,
       windowSeconds: 60,
       session
     });
 
-    await updateUserProfile(session.uid, body);
+    if (isNewProfile) {
+      await import("@/lib/server-study").then(mod => mod.bootstrapUserProfile(session.uid, {
+        displayName: body.displayName || session.displayName || "Focused Student",
+        email: session.email,
+        fcmToken: body.fcmToken
+      }));
+    } else {
+      await updateUserProfile(session.uid, body);
+    }
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {

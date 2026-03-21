@@ -55,7 +55,7 @@ export function StudentProfileCard({ profile }: { profile: AppUserProfile | null
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/5 dark:bg-slate-800/50">
           <p className="text-sm text-slate-500 dark:text-slate-400">Alerts</p>
           <p className="mt-2 text-sm font-bold">
-            {profile.preferences.notificationsEnabled ? "Push Enabled" : "Silent Mode"}
+            {profile.preferences?.notificationsEnabled ? "Push Enabled" : "Silent Mode"}
           </p>
         </div>
       </div>

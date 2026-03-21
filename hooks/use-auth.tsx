@@ -189,8 +189,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fcmToken: null
             })
           }).catch(() => null);
+
+          // Use fallback while waiting for initialization
+          setProfile(createFallbackProfile(nextUser, nextSession));
         } else {
-          setProfile(nextProfile);
+          // Merge with fallback to ensure nested properties like wallet/preferences always exist
+          const fallback = createFallbackProfile(nextUser, nextSession);
+          setProfile({
+            ...fallback,
+            ...nextProfile,
+            wallet: { ...fallback.wallet, ...nextProfile.wallet },
+            preferences: { ...fallback.preferences, ...nextProfile.preferences },
+            subscription: { ...fallback.subscription, ...nextProfile.subscription }
+          });
         }
       });
 
