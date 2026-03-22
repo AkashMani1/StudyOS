@@ -40,42 +40,45 @@ service cloud.firestore {
         request.resource.data.wallet.coins == 0 &&
         request.resource.data.wallet.transactions.size() == 0;
 
-      allow update: if isAdmin();
+      allow update: if isAdmin() || (isOwner(uid) &&
+        (!request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['role', 'wallet', 'subscription', 'email', 'createdAt']))
+      );
 
       allow delete: if isAdmin();
-    }
 
-    match /users/{uid}/goals/{goalId} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
-    }
+      match /goals/{goalId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isAdmin();
+      }
 
-    match /users/{uid}/tasks/{taskId} {
-      allow read: if isOwner(uid) || isAdmin();
+      match /tasks/{taskId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, delete, update: if isOwner(uid) || isAdmin();
+      }
 
-      allow create, delete: if isOwner(uid) || isAdmin();
+      match /dailyPlans/{planId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isAdmin();
+      }
 
-      allow update: if isOwner(uid) || isAdmin();
-    }
+      match /sessions/{sessionId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) || isAdmin();
+      }
 
-    match /users/{uid}/dailyPlans/{planId} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
-    }
+      match /focusSessions/{dateId}/{document=**} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
 
-    match /users/{uid}/sessions/{sessionId} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid) || isAdmin();
-    }
+      match /insights/{weekId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isAdmin();
+      }
 
-    match /users/{uid}/focusSessions/{dateId}/{document=**} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
-    }
-
-    match /users/{uid}/insights/{weekId} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
+      match /focusOverrides/{overrideId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
     }
 
     match /leaderboard/{weekId}/scores/{uid} {

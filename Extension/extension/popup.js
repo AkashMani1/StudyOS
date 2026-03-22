@@ -160,8 +160,8 @@ async function firestoreGet(path, idToken) {
 async function firestoreSet(path, data, idToken) {
   try {
     const firestoreBase = await getFirestoreBase();
-    const mask = Object.keys(data).join(",");
-    const response = await fetch(`${firestoreBase}/${path}?updateMask.fieldPaths=${mask}`, {
+    const mask = Object.keys(data).map(key => `updateMask.fieldPaths=${encodeURIComponent(key)}`).join("&");
+    const response = await fetch(`${firestoreBase}/${path}?${mask}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -246,15 +246,13 @@ function formatTimeRange(startIso, endIso) {
 }
 
 function formatDuration(seconds) {
-  const minutes = Math.round(seconds / 60);
-
-  if (minutes < 60) {
-    return `${minutes}m`;
+  if (isNaN(seconds) || seconds === null || seconds === undefined) {
+    return "0h 0m";
   }
-
-  const hours = Math.floor(minutes / 60);
-  const leftover = minutes % 60;
-  return leftover ? `${hours}h ${leftover}m` : `${hours}h`;
+  const totalMinutes = Math.round(seconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const leftover = totalMinutes % 60;
+  return `${hours}h ${leftover}m`;
 }
 
 function formatCountdown(endIso) {
@@ -262,15 +260,28 @@ function formatCountdown(endIso) {
     return "End time unavailable";
   }
 
-  const remainingMs = Date.parse(endIso) - Date.now();
+  const endMs = Date.parse(endIso);
+  if (isNaN(endMs)) {
+    return "Active session";
+  }
+
+  const remainingMs = endMs - Date.now();
 
   if (remainingMs <= 0) {
     return "Ending now";
   }
 
-  const minutes = Math.floor(remainingMs / 60000);
-  const seconds = Math.floor((remainingMs % 60000) / 1000);
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s left`;
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMins = minutes % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${remainingMins}m ${String(seconds).padStart(2, "0")}s left`;
+  }
+  return `${remainingMins}m ${String(seconds).padStart(2, "0")}s left`;
 }
 
 function normalizeDomain(domain) {
@@ -296,8 +307,32 @@ function getInitials(name) {
     .join("");
 }
 
-function normalizePlanBlocks(planDoc, dateKey) {
-  const rawBlocks = (planDoc && (planDoc.timeBlocks || planDoc.blocks || planDoc.sessions)) || [];
+function normalizePlanBlocks(planDoc, dateKey, fallbackTasks = []) {
+  let rawBlocks = (planDoc && (planDoc.timeBlocks || planDoc.blocks || planDoc.sessions)) || [];
+
+  // Fallback: If no plan blocks exist, use individual tasks assigned to this day
+  if ((!rawBlocks || rawBlocks.length === 0) && fallbackTasks.length > 0) {
+    let cursorMinutes = 540; // Start at 9:00 AM
+    rawBlocks = fallbackTasks.map(task => {
+      let tStart = task.startTime;
+      let tEnd = task.endTime;
+
+      if (!tStart || !tEnd) {
+        // Fallback to cursor logic if times missing
+        tStart = `${String(Math.floor(cursorMinutes / 60)).padStart(2, "0")}:${String(cursorMinutes % 60).padStart(2, "0")}`;
+        cursorMinutes += (task.estimatedMinutes || 30);
+        tEnd = `${String(Math.floor(cursorMinutes / 60)).padStart(2, "0")}:${String(cursorMinutes % 60).padStart(2, "0")}`;
+      }
+      
+      return {
+        id: task.id,
+        subject: task.subject,
+        taskName: task.taskName,
+        startTime: tStart,
+        endTime: tEnd
+      };
+    });
+  }
 
   if (!Array.isArray(rawBlocks)) {
     return [];
@@ -347,7 +382,7 @@ function getCurrentOrNextBlock(blocks) {
 function renderAuthStatus(auth, userDoc) {
   const node = document.getElementById("auth-status");
 
-  if (!auth.uid || !auth.idToken) {
+  if (!auth.uid || !auth.firebaseIdToken) {
     node.innerHTML = `
       <div class="section-body">
         <div class="session-title">Open StudyOS to sign in</div>
@@ -435,7 +470,7 @@ function renderDistractionReport(siteUsage) {
       return `
         <div class="report-item ${tone}">
           <span>${domain}</span>
-          <span>${minutes.toFixed(minutes < 10 ? 1 : 0)} min</span>
+          <span>${formatDuration(seconds)}</span>
         </div>
       `;
     })
@@ -450,8 +485,8 @@ function renderBlocklist(blocklist) {
     .map(
       (domain) => `
         <span class="tag">
-          ${domain}
-          <button type="button" data-domain="${domain}" aria-label="Remove ${domain}">x</button>
+          <span class="tag-label">${domain}</span>
+          <button type="button" class="tag-remove" data-domain="${domain}" aria-label="Remove ${domain}">✕</button>
         </span>
       `
     )
@@ -462,23 +497,27 @@ function renderStatsStrip(stats) {
   const node = document.getElementById("stats-strip");
 
   node.innerHTML = `
-    <div class="stat-item"><span>Today's focus time</span><strong>${stats.focusTime}</strong></div>
-    <div class="stat-item"><span>Coins balance</span><strong>${stats.coins}</strong></div>
-    <div class="stat-item"><span>Current streak</span><strong>${stats.streak}</strong></div>
+    <div class="stat-item"><span>Today's focus</span><strong>${stats.focusTime}</strong></div>
+    <div class="stat-item"><span>Coins</span><strong>${stats.coins}</strong></div>
+    <div class="stat-item"><span>Streak</span><strong>${stats.streak}</strong></div>
   `;
 }
 
 async function fetchPopupData() {
   const auth = await storageGet([
     "blocklist",
+    "coinsBalance",
     "currentSessionId",
     "currentSessionSubject",
     "currentTask",
     "firebaseIdToken",
     "firebaseProjectId",
+    "focusTimeToday",
     "sessionActive",
     "sessionEndTime",
+    "streak",
     "todaySiteUsage",
+    "todayTasks",
     "uid",
     "userName"
   ]);
@@ -491,20 +530,45 @@ async function fetchPopupData() {
 
   if (isConfigured) {
     const todayKey = getUtcDateKey();
-    const [rawUserDoc, rawPlanDoc, rawSessions, rawWalletDoc] = await Promise.all([
+    const [rawUserDoc, rawPlanDoc, rawSessions, rawTasks] = await Promise.all([
       firestoreGet(`users/${auth.uid}`, auth.firebaseIdToken),
       firestoreGet(`users/${auth.uid}/dailyPlans/${todayKey}`, auth.firebaseIdToken),
       firestoreList(`users/${auth.uid}/sessions`, auth.firebaseIdToken, { pageSize: "50" }),
-      firestoreGet(`users/${auth.uid}/wallet/summary`, auth.firebaseIdToken)
+      firestoreList(`users/${auth.uid}/tasks`, auth.firebaseIdToken)
     ]);
 
     userDoc = documentToData(rawUserDoc) || {};
     dailyPlan = documentToData(rawPlanDoc);
     sessions = rawSessions || [];
-    walletDoc = documentToData(rawWalletDoc) || {};
+    
+    const allTasks = (rawTasks || []).map(t => documentToData(t)).filter(Boolean);
+    const todayTasks = allTasks.filter(t => t.suggestedDay === todayKey && !t.completed);
+    
+    // Merge storage tasks (real-time sync) with Firestore tasks
+    const mergedTasks = [...todayTasks];
+    if (Array.isArray(auth.todayTasks)) {
+      auth.todayTasks.forEach(st => {
+        if (!mergedTasks.find(mt => mt.id === st.id)) {
+          mergedTasks.push(st);
+        }
+      });
+    }
+
+    const blocks = normalizePlanBlocks(dailyPlan, todayKey, mergedTasks);
+    popupState.blocks = blocks;
+
+    if (userDoc) {
+      await storageSet({
+        sessionActive: Boolean(userDoc.sessionActive),
+        currentTask: userDoc.currentTask || "",
+        sessionEndTime: userDoc.sessionEndTime || "",
+        currentSessionId: userDoc.currentSessionId || "",
+        currentSessionSubject: userDoc.currentSessionSubject || ""
+      });
+    }
   }
 
-  const blocks = normalizePlanBlocks(dailyPlan, getUtcDateKey());
+  const blocks = popupState.blocks || [];
   const highlightedBlock = getCurrentOrNextBlock(blocks);
   const focusStatus = {
     sessionActive: Boolean(auth.sessionActive || userDoc.sessionActive),
@@ -525,8 +589,10 @@ async function fetchPopupData() {
       return sum + Number(session.actualDurationSeconds || 0);
     }
 
-    if (session.startedAt && session.actualEnd) {
-      return sum + Math.max(0, Math.round((Date.parse(session.actualEnd) - Date.parse(session.startedAt)) / 1000));
+    const s = Date.parse(session.startedAt);
+    const e = Date.parse(session.actualEnd);
+    if (!isNaN(s) && !isNaN(e)) {
+      return sum + Math.max(0, Math.round((e - s) / 1000));
     }
 
     return sum;
@@ -543,9 +609,9 @@ async function fetchPopupData() {
   renderDistractionReport(auth.todaySiteUsage || {});
   renderBlocklist(Array.isArray(auth.blocklist) && auth.blocklist.length ? auth.blocklist : DEFAULT_BLOCKLIST);
   renderStatsStrip({
-    focusTime: formatDuration(totalFocusSeconds),
-    coins: String(walletDoc.coinsBalance || userDoc.coinsBalance || userDoc.walletBalance || 0),
-    streak: `${userDoc.currentStreak || userDoc.streak || walletDoc.currentStreak || 0} days`
+    focusTime: formatDuration(auth.focusTimeToday ? auth.focusTimeToday * 60 : totalFocusSeconds),
+    coins: String(auth.coinsBalance || userDoc.coinsBalance || userDoc.walletBalance || 0),
+    streak: `${auth.streak || userDoc.currentStreak || userDoc.streak || walletDoc.currentStreak || 0} days`
   });
 }
 
@@ -707,10 +773,13 @@ function bindEvents() {
 
     if (
       changes.blocklist ||
+      changes.coinsBalance ||
       changes.currentTask ||
       changes.firebaseIdToken ||
+      changes.focusTimeToday ||
       changes.sessionActive ||
       changes.sessionEndTime ||
+      changes.streak ||
       changes.todaySiteUsage ||
       changes.uid
     ) {

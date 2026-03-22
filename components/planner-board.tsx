@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Play, XCircle, Plus, Coins, AlertCircle, History, ArrowRight, CalendarDays } from "lucide-react";
+import { CheckCircle2, Clock3, Play, XCircle, Plus, Coins, AlertCircle, History, ArrowRight, CalendarDays, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Button, SectionHeading } from "@/components/ui";
@@ -40,7 +40,7 @@ function buildWeekTabs(): WeekDay[] {
 }
 
 export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const weekTabs = useMemo(() => buildWeekTabs(), []);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   
@@ -76,6 +76,18 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
     }
   }, [activeSessionId, activeEndTime, mounted]);
 
+  // Sync with Cloud Profile
+  useEffect(() => {
+    if (profile?.sessionActive) {
+      setActiveSessionId(profile.currentSessionId || null);
+      setActiveEndTime(profile.sessionEndTime || null);
+    } else if (mounted && !profile?.sessionActive && activeSessionId) {
+      // If cloud says inactive but local says active, clear local
+      setActiveSessionId(null);
+      setActiveEndTime(null);
+    }
+  }, [profile?.sessionActive, profile?.currentSessionId, profile?.sessionEndTime, mounted]);
+
   const isToday = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return selectedDay === today;
@@ -87,21 +99,42 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
     return selectedDay < today;
   }, [selectedDay]);
 
+  const [reschedulingTaskId, setReschedulingTaskId] = useState<string | null>(null);
+
   const handleReschedule = async (taskId: string) => {
+    if (!user) {
+      toast.error("Sign in to move tasks.");
+      return;
+    }
+
     try {
+      setReschedulingTaskId(taskId);
       const today = new Date().toISOString().slice(0, 10);
       await rescheduleTask(taskId, today);
+      
+      // Automatic tab switch to Today
+      setSelectedDay(today);
+      
       setOptimisticallyRemoved((prev) => [...prev, taskId]);
       toast.success("Task moved to Today!");
     } catch (error) {
       toast.error("Failed to reschedule task.");
+    } finally {
+      setReschedulingTaskId(null);
     }
   };
 
   // Derive execution blocks directly from User's manual tasks
-  const dailyTasks = tasks.filter(
-    (t) => t.suggestedDay === selectedDay && !t.completed && !optimisticallyRemoved.includes(t.id)
-  );
+  const dailyTasks = useMemo(() => {
+    return tasks
+      .filter((t) => t.suggestedDay === selectedDay && !t.completed && !optimisticallyRemoved.includes(t.id))
+      .sort((a, b) => {
+        if (!a.startTime && !b.startTime) return 0;
+        if (!a.startTime) return 1;
+        if (!b.startTime) return -1;
+        return a.startTime.localeCompare(b.startTime);
+      });
+  }, [tasks, selectedDay, optimisticallyRemoved]);
 
   const handleStart = async (task: TaskDoc) => {
     if (!user) {
@@ -177,7 +210,10 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
       <CreateTaskDialog 
         isOpen={isTaskDialogOpen} 
         onClose={() => setIsTaskDialogOpen(false)} 
-        onSuccess={() => window.location.reload()} 
+        onSuccess={() => {
+          // No reload needed! Firebase onSnapshot handles real-time updates.
+          setIsTaskDialogOpen(false);
+        }} 
         defaultDate={selectedDay || undefined}
       />
 
@@ -283,6 +319,12 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
                             <Coins className="h-3 w-3" />
                             20 Coins
                           </span>
+                          {(task.startTime || task.endTime) && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded-full ring-1 ring-indigo-400/20">
+                              <CalendarDays className="h-3 w-3" />
+                              {task.startTime || "??"} - {task.endTime || "??"}
+                            </span>
+                          )}
                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                             <Clock3 className="h-3 w-3" />
                             {formatMinutes(task.estimatedMinutes)} Target
@@ -305,19 +347,18 @@ export function PlannerBoard({ tasks }: { tasks: TaskDoc[] }) {
                       {/* Right: Actions */}
                       <div className="flex items-center gap-3 mt-2 lg:mt-0">
                         {isPast ? (
-                          !task.completed ? (
-                            <Button 
-                              onClick={() => void handleReschedule(task.id)}
-                              className="rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all group"
-                            >
+                          <Button 
+                            disabled={reschedulingTaskId === task.id}
+                            onClick={() => void handleReschedule(task.id)}
+                            className="rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all group"
+                          >
+                            {reschedulingTaskId === task.id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
                               <ArrowRight className="mr-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                              Move to Today
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                              Archive Complete
-                            </div>
-                          )
+                            )}
+                            {reschedulingTaskId === task.id ? "Moving..." : "Move to Today"}
+                          </Button>
                         ) : !isToday ? (
                           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
                             Planned for {selectedDay}

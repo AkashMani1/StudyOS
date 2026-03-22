@@ -91,15 +91,19 @@ export async function refreshLeaderboard(): Promise<LeaderboardScore[]> {
 export async function createManualTask(input: {
   taskName: string;
   subject: string;
-  estimatedMinutes: number;
+  estimatedMinutes?: number;
   suggestedDay: string;
+  startTime?: string | null;
+  endTime?: string | null;
 }): Promise<{ id: string }> {
   await trackEvent("manual_task_created", { subject: input.subject });
   return postJson<{
     taskName: string;
     subject: string;
-    estimatedMinutes: number;
+    estimatedMinutes?: number;
     suggestedDay: string;
+    startTime?: string | null;
+    endTime?: string | null;
   }, { id: string }>("/api/tasks", input);
 }
 

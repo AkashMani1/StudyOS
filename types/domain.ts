@@ -29,6 +29,8 @@ export interface TaskDoc {
   estimatedMinutes: number;
   priority: Priority;
   suggestedDay: string;
+  startTime?: string | null;
+  endTime?: string | null;
   completed: boolean;
   completedAt: TimestampValue | null;
   missedCount: number;

@@ -211,8 +211,8 @@ async function firestoreGet(path, idToken) {
 async function firestoreSet(path, data, idToken) {
   try {
     const firestoreBase = await getFirestoreBase();
-    const mask = Object.keys(data).join(",");
-    const response = await fetch(`${firestoreBase}/${path}?updateMask.fieldPaths=${mask}`, {
+    const mask = Object.keys(data).map(key => `updateMask.fieldPaths=${encodeURIComponent(key)}`).join("&");
+    const response = await fetch(`${firestoreBase}/${path}?${mask}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -490,6 +490,12 @@ function domainsMatch(hostname, blockEntry) {
     return false;
   }
 
+  // If the block entry doesn't have a dot, treat it as a keyword
+  if (!normalizedBlock.includes(".")) {
+    return normalizedHost.includes(normalizedBlock);
+  }
+
+  // Otherwise, do strict domain matching
   return normalizedHost === normalizedBlock || normalizedHost.endsWith(`.${normalizedBlock}`);
 }
 
@@ -743,7 +749,9 @@ async function applyRemoteFocusState(nextState) {
     currentTask: nextState.currentTask || "",
     sessionEndTime: nextState.sessionEndTime || "",
     currentSessionId: nextState.currentSessionId || "",
-    currentSessionSubject: nextState.currentSessionSubject || ""
+    currentSessionSubject: nextState.currentSessionSubject || "",
+    coinsBalance: nextState.coinsBalance || 0,
+    streak: nextState.streak || 0
   };
 
   await storageSet({
@@ -751,7 +759,9 @@ async function applyRemoteFocusState(nextState) {
     currentSessionSubject: cachedFocusState.currentSessionSubject,
     currentTask: cachedFocusState.currentTask,
     sessionActive: cachedFocusState.sessionActive,
-    sessionEndTime: cachedFocusState.sessionEndTime
+    sessionEndTime: cachedFocusState.sessionEndTime,
+    coinsBalance: cachedFocusState.coinsBalance,
+    streak: cachedFocusState.streak
   });
 
   if (previousState.sessionActive && !cachedFocusState.sessionActive) {
@@ -775,12 +785,16 @@ async function pollFocusSessionState() {
     currentSessionId: userDoc.currentSessionId || "",
     currentSessionSubject: userDoc.currentSessionSubject || "",
     userName: userDoc.displayName || userDoc.name || "",
-    userPhotoUrl: userDoc.photoUrl || userDoc.avatarUrl || ""
+    userPhotoUrl: userDoc.photoUrl || userDoc.avatarUrl || "",
+    coinsBalance: userDoc.wallet?.coins || 0,
+    streak: userDoc.streak || 0
   });
 
   await storageSet({
     userName: userDoc.displayName || userDoc.name || "",
     userPhotoUrl: userDoc.photoUrl || userDoc.avatarUrl || "",
+    coinsBalance: userDoc.wallet?.coins || 0,
+    streak: userDoc.streak || 0,
     extensionInstalled: true
   });
 }
@@ -944,17 +958,23 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   handleActiveTabChange(activeInfo.tabId);
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.url) {
-    pollFocusSessionState();
+    await pollFocusSessionState();
   }
 
   if (changeInfo.url || tab.url) {
-    maybeBlockTab(tabId, changeInfo.url || tab.url);
+    await maybeBlockTab(tabId, changeInfo.url || tab.url);
   }
 
   if (tab.active && changeInfo.url) {
     handleActiveTabNavigation(tabId, changeInfo.url);
+  }
+});
+
+chrome.webNavigation.onBeforeNavigate.addListener((details) => {
+  if (details.frameId === 0) {
+    maybeBlockTab(details.tabId, details.url);
   }
 });
 
@@ -1022,7 +1042,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     changes.currentSessionId ||
     changes.currentSessionSubject
   ) {
-    getFocusState();
+    getFocusState().then((state) => {
+      if (state.sessionActive && (changes.sessionActive?.newValue === true || !changes.sessionActive)) {
+        // If session just became active, immediately check all open tabs
+        chrome.tabs.query({}).then((tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.url) maybeBlockTab(tab.id, tab.url);
+          });
+        });
+      }
+    });
   }
 
   if (changes.firebaseIdToken || changes.uid) {

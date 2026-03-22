@@ -13,6 +13,7 @@ function AppEffects() {
   const pathname = usePathname();
 
   useFCMRegistration();
+  console.log("[PROVIDERS_V17] Calling useExtensionSync");
   useExtensionSync();
 
   useEffect(() => {

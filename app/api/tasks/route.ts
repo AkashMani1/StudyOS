@@ -9,8 +9,10 @@ import { z } from "zod";
 const createTaskSchema = z.object({
   taskName: z.string().min(2).max(100),
   subject: z.string().min(1).max(50),
-  estimatedMinutes: z.number().int().min(10).max(600),
+  estimatedMinutes: z.number().int().min(10).max(600).optional(),
   suggestedDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/).optional().nullable(),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/).optional().nullable(),
 });
 
 export async function POST(request: Request) {
@@ -31,13 +33,27 @@ export async function POST(request: Request) {
     
     const body = await parseRequestBody(request, createTaskSchema);
     
+    // Calculate duration from start/end if both provided
+    let duration = body.estimatedMinutes || 30;
+    if (body.startTime && body.endTime) {
+      const start = body.startTime.split(':').map(Number);
+      const end = body.endTime.split(':').map(Number);
+      const startMin = start[0]! * 60 + start[1]!;
+      const endMin = end[0]! * 60 + end[1]!;
+      if (endMin > startMin) {
+        duration = endMin - startMin;
+      }
+    }
+
     const ref = adminDb.collection("users").doc(session.uid).collection("tasks").doc();
     
     const taskData = {
       taskName: body.taskName,
       subject: body.subject,
-      estimatedMinutes: body.estimatedMinutes,
+      estimatedMinutes: duration,
       suggestedDay: body.suggestedDay,
+      startTime: body.startTime || null,
+      endTime: body.endTime || null,
       priority: 3, // Default normal priority
       completed: false,
       completedAt: null,

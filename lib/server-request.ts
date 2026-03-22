@@ -10,6 +10,11 @@ export async function parseRequestBody<T>(request: Request, schema: ZodSchema<T>
     return schema.parse(json);
   } catch (error) {
     if (error instanceof Error) {
+      // Handle ZodErrors more gracefully
+      if ((error as any).issues) {
+        const messages = (error as any).issues.map((i: any) => `${i.path.join('.')}: ${i.message}`);
+        throw new HttpError(400, messages.join(', '));
+      }
       throw new HttpError(400, error.message);
     }
 

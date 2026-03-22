@@ -19,8 +19,29 @@ export function ActiveSessionTimer({ selectedDay, activeEndTime }: ActiveSession
 
     // Set immediate first tick so we don't wait 1000ms for the first render
     const updateTime = () => {
-      const target = new Date(`${selectedDay}T${activeEndTime}`);
+      let target: Date;
+
+      if (typeof activeEndTime === "string") {
+        if (activeEndTime.includes("T")) {
+          // Full ISO string from Extension
+          target = new Date(activeEndTime);
+        } else {
+          // "HH:mm" from Daily Plan
+          target = new Date(`${selectedDay}T${activeEndTime}`);
+        }
+      } else if (activeEndTime && typeof activeEndTime === "object" && "seconds" in activeEndTime) {
+        // Firestore Timestamp
+        target = new Date((activeEndTime as any).seconds * 1000);
+      } else {
+        target = new Date(activeEndTime as any);
+      }
+
       const diff = Math.max(target.getTime() - Date.now(), 0);
+      if (isNaN(diff)) {
+        setCountdownLabel("00:00:00");
+        return;
+      }
+
       const totalSeconds = Math.floor(diff / 1000);
       const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
       const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");

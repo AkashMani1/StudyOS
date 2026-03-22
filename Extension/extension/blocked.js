@@ -9,14 +9,18 @@ function formatLocalTime(isoValue) {
 
   const date = new Date(isoValue);
 
-  if (Number.isNaN(date.getTime())) {
+  if (isNaN(date.getTime())) {
     return "Unknown";
   }
 
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit"
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(date);
+  } catch (e) {
+    return "Scheduled Time";
+  }
 }
 
 function formatRemaining(endTime) {
@@ -24,7 +28,12 @@ function formatRemaining(endTime) {
     return "Session end time unavailable.";
   }
 
-  const remainingMs = Date.parse(endTime) - Date.now();
+  const endMs = Date.parse(endTime);
+  if (isNaN(endMs)) {
+    return "Study session in progress.";
+  }
+
+  const remainingMs = endMs - Date.now();
 
   if (remainingMs <= 0) {
     return "This focus block is ending now.";

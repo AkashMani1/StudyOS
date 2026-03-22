@@ -559,19 +559,24 @@ export async function completePlannerSession(uid: string, sessionId: string, tas
   const taskRef = adminDb.collection("users").doc(uid).collection("tasks").doc(taskId);
   const [sessionSnapshot, taskSnapshot] = await Promise.all([sessionRef.get(), taskRef.get()]);
 
-  if (!sessionSnapshot.exists || !taskSnapshot.exists) {
-    throw new Error("Session or task not found.");
+  if (!taskSnapshot.exists) {
+    throw new Error("Task not found.");
   }
 
   const batch = adminDb.batch();
-  batch.set(sessionRef,
-    {
-      actualEnd: FieldValue.serverTimestamp(),
-      completed: true,
-      updatedAt: FieldValue.serverTimestamp()
-    },
-    { merge: true }
-  );
+  
+  // Only update session if it exists
+  if (sessionSnapshot.exists) {
+    batch.set(sessionRef,
+      {
+        actualEnd: FieldValue.serverTimestamp(),
+        completed: true,
+        updatedAt: FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+  }
+
   batch.set(taskRef,
     {
       completed: true,
@@ -709,20 +714,24 @@ export async function missPlannerSession(input: {
   const taskRef = adminDb.collection("users").doc(input.uid).collection("tasks").doc(input.taskId);
   const [sessionSnapshot, taskSnapshot] = await Promise.all([sessionRef.get(), taskRef.get()]);
 
-  if (!sessionSnapshot.exists || !taskSnapshot.exists) {
-    throw new Error("Session or task not found.");
+  if (!taskSnapshot.exists) {
+    throw new Error("Task not found.");
   }
 
   const batch = adminDb.batch();
-  batch.set(sessionRef,
-    {
-      actualEnd: FieldValue.serverTimestamp(),
-      completed: false,
-      missedReason: input.reason,
-      updatedAt: FieldValue.serverTimestamp()
-    },
-    { merge: true }
-  );
+
+  if (sessionSnapshot.exists) {
+    batch.set(sessionRef,
+      {
+        actualEnd: FieldValue.serverTimestamp(),
+        completed: false,
+        missedReason: input.reason,
+        updatedAt: FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+  }
+
   batch.set(taskRef,
     {
       missedCount: FieldValue.increment(1),

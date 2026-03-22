@@ -14,15 +14,18 @@ interface CreateTaskDialogProps {
 }
 
 export function CreateTaskDialog({ isOpen, onClose, onSuccess, defaultDate }: CreateTaskDialogProps) {
+  const getTodayIso = () => new Date().toISOString().split('T')[0];
+
   const [taskName, setTaskName] = useState("");
   const [subject, setSubject] = useState("");
-  const [estimatedMinutes, setEstimatedMinutes] = useState(30);
-  const [suggestedDay, setSuggestedDay] = useState(defaultDate || new Date().toISOString().slice(0, 10));
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [suggestedDay, setSuggestedDay] = useState(defaultDate || getTodayIso());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setSuggestedDay(defaultDate || new Date().toISOString().slice(0, 10));
+      setSuggestedDay(defaultDate || getTodayIso());
     }
   }, [isOpen, defaultDate]);
 
@@ -40,11 +43,14 @@ export function CreateTaskDialog({ isOpen, onClose, onSuccess, defaultDate }: Cr
       await createManualTask({
         taskName,
         subject,
-        estimatedMinutes,
+        startTime: startTime || null,
+        endTime: endTime || null,
         suggestedDay,
       });
       toast.success("Task added successfully.");
       setTaskName("");
+      setStartTime("");
+      setEndTime("");
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
@@ -67,7 +73,7 @@ export function CreateTaskDialog({ isOpen, onClose, onSuccess, defaultDate }: Cr
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">Manual Task Entry</h2>
-            <p className="text-sm text-slate-400">Bypass AI and block out your own time.</p>
+            <p className="text-sm text-slate-400">Schedule a specific time slot for your work.</p>
           </div>
           <button 
             onClick={onClose}
@@ -109,22 +115,6 @@ export function CreateTaskDialog({ isOpen, onClose, onSuccess, defaultDate }: Cr
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Duration (min)</label>
-              <div className="relative">
-                <Clock3 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
-                  type="number"
-                  value={estimatedMinutes}
-                  onChange={(e) => setEstimatedMinutes(parseInt(e.target.value) || 30)}
-                  min={10}
-                  step={5}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium text-slate-300">Target Date</label>
               <div className="relative">
                 <input
@@ -135,6 +125,32 @@ export function CreateTaskDialog({ isOpen, onClose, onSuccess, defaultDate }: Cr
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Start Time</label>
+              <div className="relative">
+                <Clock3 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">End Time</label>
+            <div className="relative">
+              <Clock3 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+              />
             </div>
           </div>
 
