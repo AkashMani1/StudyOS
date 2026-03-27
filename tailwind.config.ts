@@ -16,9 +16,9 @@ const config: Config = {
       colors: {
         ink: "#09111f",
         mist: "#edf3ff",
-        aurora: "#8ee3c1",
-        ember: "#ff7b54",
-        comet: "#5f6fff",
+        aurora: "#a3f0d5",
+        ember: "#ff9b7a",
+        comet: "#8b97ff",
         tide: "#12213d",
         night: "#050816"
       },

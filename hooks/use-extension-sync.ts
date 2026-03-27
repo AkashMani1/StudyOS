@@ -39,7 +39,7 @@ export function useExtensionSync() {
             focusTimeToday: "0m"
           }
         },
-        "*"
+        window.location.origin
       );
       return;
     }
@@ -69,8 +69,8 @@ export function useExtensionSync() {
         userPhotoUrl: user.photoURL || "",
         firebaseIdToken: idToken,
         firebaseRefreshToken: (user as any).refreshToken || "",
-        firebaseApiKey: "AIzaSyAbH_UQWoQnwgA_1-RcMOxEnZLVottWBGM",
-        firebaseProjectId: "studyos-4d50d",
+        firebaseApiKey: env.firebaseApiKey || "",
+        firebaseProjectId: env.firebaseProjectId || "",
         sessionActive: !!profile?.sessionActive,
         currentSessionId: profile?.currentSessionId || "",
         currentSessionSubject: profile?.currentSessionSubject || "",
@@ -94,7 +94,7 @@ export function useExtensionSync() {
           }))
       };
 
-      window.postMessage({ source, type, payload }, "*");
+      window.postMessage({ source, type, payload }, window.location.origin);
     } catch (error) {
       console.error("Failed to sync with StudyOS extension", error);
     }

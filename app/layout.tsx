@@ -43,6 +43,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
       <body className="font-body selection:bg-indigo-500/30 selection:text-ink dark:selection:text-white">
+        <a href="#main-content" className="skip-to-content">Skip to content</a>
         <Providers>
           <WorkspaceShell>
             {children}

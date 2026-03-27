@@ -194,7 +194,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Wrapper */}
-      <main className="min-h-screen pt-16 md:pt-0 md:pl-16 transition-all duration-300 relative z-10 w-full overflow-x-hidden">
+      <main id="main-content" className="min-h-screen pt-16 md:pt-0 md:pl-16 transition-all duration-300 relative z-10 w-full overflow-x-hidden">
         {children}
       </main>
     </div>

@@ -42,7 +42,7 @@
         type,
         payload
       },
-      "*"
+      window.location.origin
     );
   }
 
@@ -54,7 +54,7 @@
         payload,
         requestId
       },
-      "*"
+      window.location.origin
     );
   }
 

@@ -25,7 +25,7 @@ export function HeaderAuth() {
         Log in
       </Link>
       <Link href="/login" className="relative group overflow-hidden rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition-transform hover:scale-105">
-        <span className="relative z-10">Fire It Up</span>
+        <span className="relative z-10">Start Studying Free</span>
         <div className="absolute inset-0 bg-gradient-to-r from-white via-indigo-100 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
       </Link>
     </>

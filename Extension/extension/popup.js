@@ -7,6 +7,12 @@ const DEFAULT_BLOCKLIST = [
   "netflix.com"
 ];
 
+const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, function (c) { return HTML_ESCAPE_MAP[c]; });
+}
+
 let popupState = {
   focusStatus: null,
   highlightedBlock: null
@@ -385,8 +391,8 @@ function renderAuthStatus(auth, userDoc) {
   if (!auth.uid || !auth.firebaseIdToken) {
     node.innerHTML = `
       <div class="section-body">
-        <div class="session-title">Open StudyOS to sign in</div>
-        <div class="muted">Your Firebase ID token needs to be written into extension storage by the web app.</div>
+        <div class="session-title">Connect your account to unlock Focus Guard</div>
+        <div class="muted">Open StudyOS in a tab and sign in to sync your data.</div>
       </div>
     `;
     return;
@@ -395,10 +401,10 @@ function renderAuthStatus(auth, userDoc) {
   const name = userDoc.displayName || userDoc.name || auth.userName || auth.uid;
   node.innerHTML = `
     <div class="auth-row">
-      <div class="avatar">${getInitials(name)}</div>
+      <div class="avatar">${escapeHtml(getInitials(name))}</div>
       <div>
-        <div class="session-title">${name}</div>
-        <div class="muted">${auth.uid}</div>
+        <div class="session-title">${escapeHtml(name)}</div>
+        <div class="muted">${escapeHtml(auth.uid)}</div>
       </div>
     </div>
   `;
@@ -409,7 +415,7 @@ function renderSessions(blocks, highlightedBlock) {
   const startButton = document.getElementById("start-focus-button");
 
   if (!blocks.length) {
-    node.innerHTML = `<div class="empty">No daily plan found for today.</div>`;
+    node.innerHTML = `<div class="empty">No plan yet. Open StudyOS to generate one.</div>`;
     startButton.disabled = true;
     return;
   }
@@ -423,8 +429,8 @@ function renderSessions(blocks, highlightedBlock) {
 
       return `
         <div class="${cardClass}">
-          <div class="session-title">${block.subject}: ${block.taskName}</div>
-          <div class="session-meta">${formatTimeRange(block.startTime, block.endTime)}</div>
+          <div class="session-title">${escapeHtml(block.subject)}: ${escapeHtml(block.taskName)}</div>
+          <div class="session-meta">${escapeHtml(formatTimeRange(block.startTime, block.endTime))}</div>
         </div>
       `;
     })
@@ -438,15 +444,15 @@ function renderFocusStatus(focusStatus) {
   const endButton = document.getElementById("end-focus-button");
 
   if (!focusStatus || !focusStatus.sessionActive) {
-    node.innerHTML = `<div class="empty">No active focus session right now.</div>`;
+    node.innerHTML = `<div class="empty">You're off the clock. Start your next session above.</div>`;
     endButton.disabled = true;
     return;
   }
 
   node.innerHTML = `
     <div class="status-pill"><span class="status-dot"></span> Focus session active</div>
-    <div class="session-title">${focusStatus.currentTask || "Current StudyOS task"}</div>
-    <div class="session-meta">${formatCountdown(focusStatus.sessionEndTime)}</div>
+    <div class="session-title">${escapeHtml(focusStatus.currentTask || "Current StudyOS task")}</div>
+    <div class="session-meta">${escapeHtml(formatCountdown(focusStatus.sessionEndTime))}</div>
   `;
   endButton.disabled = false;
 }
@@ -469,8 +475,8 @@ function renderDistractionReport(siteUsage) {
 
       return `
         <div class="report-item ${tone}">
-          <span>${domain}</span>
-          <span>${formatDuration(seconds)}</span>
+          <span>${escapeHtml(domain)}</span>
+          <span>${escapeHtml(formatDuration(seconds))}</span>
         </div>
       `;
     })
@@ -485,8 +491,8 @@ function renderBlocklist(blocklist) {
     .map(
       (domain) => `
         <span class="tag">
-          <span class="tag-label">${domain}</span>
-          <button type="button" class="tag-remove" data-domain="${domain}" aria-label="Remove ${domain}">✕</button>
+          <span class="tag-label">${escapeHtml(domain)}</span>
+          <button type="button" class="tag-remove" data-domain="${escapeHtml(domain)}" aria-label="Remove ${escapeHtml(domain)}">✕</button>
         </span>
       `
     )
@@ -497,9 +503,9 @@ function renderStatsStrip(stats) {
   const node = document.getElementById("stats-strip");
 
   node.innerHTML = `
-    <div class="stat-item"><span>Today's focus</span><strong>${stats.focusTime}</strong></div>
-    <div class="stat-item"><span>Coins</span><strong>${stats.coins}</strong></div>
-    <div class="stat-item"><span>Streak</span><strong>${stats.streak}</strong></div>
+    <div class="stat-item"><span>Today's focus</span><strong>${escapeHtml(stats.focusTime)}</strong></div>
+    <div class="stat-item"><span>Coins</span><strong>${escapeHtml(stats.coins)}</strong></div>
+    <div class="stat-item"><span>Streak</span><strong>${escapeHtml(stats.streak)}</strong></div>
   `;
 }
 

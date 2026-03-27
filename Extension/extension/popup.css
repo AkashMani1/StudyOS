@@ -1,11 +1,11 @@
 :root {
   color-scheme: dark;
-  --bg: #070d14;
+  --bg: #050816;
   --bg-alt: rgba(12, 18, 28, 0.95);
   --border: rgba(148, 163, 184, 0.16);
-  --border-strong: rgba(125, 211, 252, 0.24);
-  --accent: #7dd3fc;
-  --accent-strong: #38bdf8;
+  --border-strong: rgba(139, 151, 255, 0.24);
+  --accent: #8b97ff;
+  --accent-strong: #5f6fff;
   --good: #22c55e;
   --warn: #f59e0b;
   --bad: #fb7185;
@@ -22,10 +22,10 @@ body {
   margin: 0;
   width: 360px;
   min-height: 560px;
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 28%),
-    linear-gradient(180deg, #060b11, #0c131d 55%, #08101a);
+    radial-gradient(circle at top, rgba(139, 151, 255, 0.18), transparent 28%),
+    linear-gradient(180deg, #050816, #0c131d 55%, #050816);
   color: var(--text);
 }
 
@@ -92,7 +92,7 @@ h2 {
   place-items: center;
   font-weight: 700;
   color: #082032;
-  background: linear-gradient(135deg, #7dd3fc, #a7f3d0);
+  background: linear-gradient(135deg, #8b97ff, #a3f0d5);
 }
 
 .muted {
@@ -223,7 +223,7 @@ h2 {
 
 .primary-button {
   color: #082032;
-  background: linear-gradient(135deg, #7dd3fc, #a7f3d0);
+  background: linear-gradient(135deg, #8b97ff, #a3f0d5);
 }
 
 .secondary-button {
@@ -243,9 +243,9 @@ h2 {
   padding: 14px;
   border-radius: 18px;
   background:
-    linear-gradient(135deg, rgba(125, 211, 252, 0.16), rgba(167, 243, 208, 0.08)),
+    linear-gradient(135deg, rgba(139, 151, 255, 0.16), rgba(163, 240, 213, 0.08)),
     rgba(12, 18, 28, 0.98);
-  border: 1px solid rgba(125, 211, 252, 0.18);
+  border: 1px solid rgba(139, 151, 255, 0.18);
   box-shadow: 0 14px 28px var(--shadow);
 }
 
@@ -253,4 +253,13 @@ h2 {
   padding: 8px 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+/* Keyboard focus indicators for accessibility */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
 }

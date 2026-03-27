@@ -1,8 +1,10 @@
 {
   "manifest_version": 3,
   "name": "StudyOS Focus Guard",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Track distraction time, sync focus sessions, and block distracting sites during StudyOS focus blocks.",
+  "minimum_chrome_version": "109",
+  "offline_enabled": true,
   "permissions": [
     "tabs",
     "storage",
